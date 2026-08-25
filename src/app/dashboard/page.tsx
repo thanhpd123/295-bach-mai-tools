@@ -1,5 +1,14 @@
 import Link from "next/link";
-import { ArrowRight, CreditCard, Receipt, Users } from "lucide-react";
+import {
+    AlertTriangle,
+    ArrowRight,
+    Banknote,
+    CircleDollarSign,
+    DoorOpen,
+    Home,
+    Receipt,
+    Users,
+} from "lucide-react";
 import {
     Card,
     CardContent,
@@ -7,13 +16,56 @@ import {
     CardHeader,
     CardTitle,
 } from "@/components/ui/card";
+import { getDashboardStats } from "@/lib/services/dashboard.service";
+import { formatCurrency, formatDate } from "@/lib/utils";
 
-/**
- * Trang tổng quan (dashboard).
- * Các số liệu dưới đây là mẫu — khi có dữ liệu thật, gọi API trong
- * Server Component bằng cách dùng trực tiếp service layer (src/lib/services).
- */
-export default function DashboardPage() {
+export const dynamic = "force-dynamic";
+
+/** Trang tổng quan (chủ nhà/quản lý). */
+export default async function DashboardPage() {
+    const stats = await getDashboardStats();
+
+    const statCards = [
+        {
+            icon: Home,
+            label: "Tổng số phòng",
+            value: String(stats.totalRooms),
+            sub: `${stats.vacantRooms} trống · ${stats.maintenanceRooms} bảo trì`,
+        },
+        {
+            icon: Users,
+            label: "Đang cho thuê",
+            value: String(stats.occupiedRooms),
+            sub: `Tỷ lệ lấp đầy ${stats.totalRooms ? Math.round((stats.occupiedRooms / stats.totalRooms) * 100) : 0}%`,
+        },
+        {
+            icon: Receipt,
+            label: "Chờ thanh toán",
+            value: String(stats.pendingInvoices),
+            sub: `${stats.overdueInvoices} hoá đơn quá hạn`,
+        },
+        {
+            icon: CircleDollarSign,
+            label: "Doanh thu kỳ này",
+            value: formatCurrency(stats.monthRevenue),
+            sub: stats.currentPeriodCode ? `Kỳ ${stats.currentPeriodCode}` : "Chưa mở kỳ",
+        },
+        {
+            icon: Banknote,
+            label: "Đã thu kỳ này",
+            value: formatCurrency(stats.monthCollected),
+            sub: `Còn ${formatCurrency(stats.monthOutstanding)} chưa thu`,
+        },
+        {
+            icon: DoorOpen,
+            label: "Hạn thanh toán",
+            value: stats.currentPeriodDueDate
+                ? formatDate(stats.currentPeriodDueDate)
+                : "—",
+            sub: "Hạn chót của kỳ hiện tại",
+        },
+    ];
+
     return (
         <div className="space-y-6">
             <div>
@@ -21,63 +73,63 @@ export default function DashboardPage() {
                     Tổng quan
                 </h1>
                 <p className="text-sm text-slate-500">
-                    Chào mừng bạn trở lại, đây là bảng điều khiển quản lý thanh toán.
+                    Tình hình phòng trọ và thu tiền của kỳ hiện tại.
                 </p>
             </div>
 
             {/* Stat cards */}
-            <div className="grid gap-4 sm:grid-cols-3">
-                <Card>
-                    <CardHeader className="flex-row items-center justify-between space-y-0">
-                        <CardDescription>Tổng phiếu thu</CardDescription>
-                        <Receipt className="size-4 text-blue-600" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">—</div>
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardHeader className="flex-row items-center justify-between space-y-0">
-                        <CardDescription>Bệnh nhân</CardDescription>
-                        <Users className="size-4 text-blue-600" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">—</div>
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardHeader className="flex-row items-center justify-between space-y-0">
-                        <CardDescription>Doanh thu</CardDescription>
-                        <CreditCard className="size-4 text-blue-600" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">—</div>
-                    </CardContent>
-                </Card>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {statCards.map((card) => (
+                    <Card key={card.label}>
+                        <CardHeader className="flex-row items-center justify-between space-y-0">
+                            <CardDescription>{card.label}</CardDescription>
+                            <card.icon className="size-4 text-blue-600" />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold">{card.value}</div>
+                            <div className="mt-1 text-xs text-slate-500">{card.sub}</div>
+                        </CardContent>
+                    </Card>
+                ))}
             </div>
 
             {/* Quick actions */}
             <Card>
                 <CardHeader>
-                    <CardTitle>Bắt đầu nhanh</CardTitle>
+                    <CardTitle>Thao tác nhanh</CardTitle>
                     <CardDescription>
-                        Kết nối database rồi tạo dữ liệu mẫu để xem luồng hoạt động.
+                        Quy trình hằng tháng: mở kỳ → nhập chỉ số → tạo hoá đơn → người thuê
+                        quét QR thanh toán.
                     </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-2 text-sm text-slate-600">
-                    <ol className="list-inside list-decimal space-y-1">
-                        <li>Cấu hình <code className="rounded bg-slate-100 px-1.5 py-0.5">DATABASE_URL</code> trong <code className="rounded bg-slate-100 px-1.5 py-0.5">.env</code></li>
-                        <li>Chạy <code className="rounded bg-slate-100 px-1.5 py-0.5">npm run db:migrate</code> để tạo bảng</li>
-                        <li>Chạy <code className="rounded bg-slate-100 px-1.5 py-0.5">npm run db:seed</code> để thêm dữ liệu mẫu</li>
-                    </ol>
+                <CardContent className="flex flex-wrap gap-3">
                     <Link
-                        href="/dashboard/payments"
-                        className="mt-4 inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700"
+                        href="/dashboard/billing"
+                        className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700"
                     >
-                        Xem danh sách thanh toán <ArrowRight className="size-4" />
+                        Mở kỳ & nhập chỉ số <ArrowRight className="size-4" />
+                    </Link>
+                    <Link
+                        href="/dashboard/invoices"
+                        className="inline-flex items-center gap-2 rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
+                    >
+                        Xem hoá đơn
+                    </Link>
+                    <Link
+                        href="/dashboard/rooms"
+                        className="inline-flex items-center gap-2 rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
+                    >
+                        Cập nhật phòng trống
                     </Link>
                 </CardContent>
             </Card>
+
+            {stats.overdueInvoices > 0 && (
+                <div className="flex items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                    <AlertTriangle className="size-4 shrink-0" />
+                    Có {stats.overdueInvoices} hoá đơn quá hạn cần nhắc người thuê.
+                </div>
+            )}
         </div>
     );
 }

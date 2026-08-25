@@ -16,11 +16,9 @@ export async function login(
 ): Promise<LoginResult> {
     const user = await db.user.findUnique({ where: { email: input.email } });
 
-    const invalidCredentials = () => {
+    if (!user || !user.isActive) {
         throw new AuthError(401, "Email hoặc mật khẩu không đúng");
-    };
-
-    if (!user || !user.isActive) invalidCredentials();
+    }
 
     if (user.lockedUntil && user.lockedUntil > new Date()) {
         throw new AuthError(
@@ -53,7 +51,7 @@ export async function login(
             ip: clientInfo.ip,
             userAgent: clientInfo.userAgent,
         });
-        invalidCredentials();
+        throw new AuthError(401, "Email hoặc mật khẩu không đúng");
     }
 
     await db.user.update({
@@ -66,7 +64,11 @@ export async function login(
         role: user.role,
         name: user.name,
     };
-    await createSession(sessionUser);
+    await createSession({
+        sub: sessionUser.id,
+        role: sessionUser.role,
+        name: sessionUser.name,
+    });
 
     await writeAudit({
         actorId: user.id,

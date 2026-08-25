@@ -2,14 +2,30 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Receipt, type LucideIcon } from "lucide-react";
+import {
+    Activity,
+    ArrowLeftRight,
+    CalendarDays,
+    Home,
+    LayoutDashboard,
+    Receipt,
+    Settings,
+    Users,
+    type LucideIcon,
+} from "lucide-react";
 import { navItems, siteConfig } from "@/config/site";
 import { cn } from "@/lib/utils";
 
 /** Map icon theo từng mục menu */
 const iconByHref: Record<string, LucideIcon> = {
     "/dashboard": LayoutDashboard,
-    "/dashboard/payments": Receipt,
+    "/dashboard/rooms": Home,
+    "/dashboard/tenants": Users,
+    "/dashboard/billing": CalendarDays,
+    "/dashboard/invoices": Receipt,
+    "/dashboard/transfers": ArrowLeftRight,
+    "/dashboard/settings": Settings,
+    "/dashboard/health": Activity,
 };
 
 export function Sidebar() {
@@ -20,13 +36,13 @@ export function Sidebar() {
             {/* Logo */}
             <div className="flex h-16 items-center gap-2.5 border-b border-slate-200 px-5">
                 <div className="flex size-9 items-center justify-center rounded-lg bg-blue-600 text-xs font-bold text-white">
-                    295
+                    {siteConfig.shortName}
                 </div>
                 <div>
                     <div className="text-sm font-semibold leading-tight">
                         {siteConfig.name}
                     </div>
-                    <div className="text-xs text-slate-400">Payment manager</div>
+                    <div className="text-xs text-slate-400">Chủ nhà / Quản lý</div>
                 </div>
             </div>
 
@@ -57,7 +73,7 @@ export function Sidebar() {
 
             {/* Footer */}
             <div className="border-t border-slate-200 p-4 text-xs text-slate-400">
-                v0.1.0 · Next.js + Prisma
+                v0.2.0 · Next.js + Prisma
             </div>
         </aside>
     );

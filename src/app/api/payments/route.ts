@@ -1,35 +1,12 @@
-import { handleApiError } from "@/lib/api/error-handler";
-import { ok } from "@/lib/api/response";
-import { createPayment, listPayments } from "@/lib/services/payment.service";
-import {
-    createPaymentSchema,
-    paymentQuerySchema,
-} from "@/lib/validation/payment";
-import type { NextRequest } from "next/server";
+import { fail } from "@/lib/api/response";
 
-/**
- *  GET  /api/payments          → danh sách (phân trang + lọc + tìm kiếm)
- *  POST /api/payments          → tạo mới phiếu thanh toán
- */
+/** API cũ của app phòng khám đã ngừng hoạt động. */
 export const dynamic = "force-dynamic";
 
-export async function GET(request: NextRequest) {
-    try {
-        const query = paymentQuerySchema.parse(
-            Object.fromEntries(request.nextUrl.searchParams),
-        );
-        return ok(await listPayments(query));
-    } catch (error) {
-        return handleApiError(error);
-    }
+export async function GET() {
+    return fail("API này đã được thay bằng /api/invoices", 410);
 }
 
-export async function POST(request: NextRequest) {
-    try {
-        const body = await request.json();
-        const input = createPaymentSchema.parse(body);
-        return ok(await createPayment(input), { status: 201 });
-    } catch (error) {
-        return handleApiError(error);
-    }
+export async function POST() {
+    return fail("API này đã được thay bằng /api/invoices", 410);
 }

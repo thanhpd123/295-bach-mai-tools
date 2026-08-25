@@ -4,11 +4,11 @@
  */
 
 export const siteConfig = {
-    name: "295 Bạch Mai Tools",
-    shortName: "295BM",
-    description: "Hệ thống quản lý thanh toán phòng khám 295 Bạch Mai",
+    name: "Quản lý phòng trọ",
+    shortName: "QLPT",
+    description:
+        "Hệ thống quản lý phòng trọ và thu tiền điện nước hàng tháng",
     url: process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000",
-    github: "https://github.com/thanhpd123/295-bach-mai-tools",
 } as const;
 
 export interface NavItem {
@@ -16,8 +16,14 @@ export interface NavItem {
     href: string;
 }
 
-/** Menu chính trong sidebar của dashboard */
+/** Menu chính trong sidebar của dashboard (chủ nhà/quản lý). */
 export const navItems: NavItem[] = [
     { title: "Tổng quan", href: "/dashboard" },
-    { title: "Thanh toán", href: "/dashboard/payments" },
+    { title: "Phòng", href: "/dashboard/rooms" },
+    { title: "Người thuê", href: "/dashboard/tenants" },
+    { title: "Kỳ & Chỉ số", href: "/dashboard/billing" },
+    { title: "Hoá đơn", href: "/dashboard/invoices" },
+    { title: "Giao dịch", href: "/dashboard/transfers" },
+    { title: "Cài đặt", href: "/dashboard/settings" },
+    { title: "Sức khoẻ hệ thống", href: "/dashboard/health" },
 ];

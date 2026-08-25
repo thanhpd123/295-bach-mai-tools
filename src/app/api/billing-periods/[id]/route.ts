@@ -1,10 +1,7 @@
 import { handleApiError } from "@/lib/api/error-handler";
 import { fail, ok } from "@/lib/api/response";
 import { requireAdmin } from "@/lib/auth/current-user";
-import {
-    closeBillingPeriod,
-    getBillingPeriod,
-} from "@/lib/services/billing.service";
+import { getBillingPeriod } from "@/lib/services/billing.service";
 
 /** GET /api/billing-periods/:id → chi tiết kỳ */
 export const dynamic = "force-dynamic";
