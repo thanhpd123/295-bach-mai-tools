@@ -1,5 +1,5 @@
 // ============================================================
-//  Prisma Schema — Hệ thống quản lý thanh toán 295 Bạch Mai
+//  Prisma Schema — Hệ thống quản lý phòng trọ & thu tiền
 //  Tài liệu: https://pris.ly/d/prisma-schema
 // ============================================================
 
@@ -16,87 +16,276 @@ datasource db {
 // Enums
 // ------------------------------------------------------------
 
-/// Trạng thái của một phiếu thanh toán
-enum PaymentStatus {
+/// Vai trò người dùng
+enum UserRole {
+  ADMIN /// Chủ nhà / quản lý
+  TENANT /// Người thuê
+}
+
+/// Trạng thái phòng
+enum RoomStatus {
+  VACANT /// Đang trống
+  OCCUPIED /// Đang có người thuê
+  MAINTENANCE /// Đang bảo trì
+}
+
+/// Trạng thái hợp đồng thuê
+enum LeaseStatus {
+  ACTIVE /// Đang hiệu lực
+  ENDED /// Đã kết thúc
+}
+
+/// Trạng thái kỳ thanh toán
+enum BillingPeriodStatus {
+  OPEN /// Đang mở
+  CLOSED /// Đã chốt
+}
+
+/// Trạng thái hoá đơn
+enum InvoiceStatus {
+  DRAFT /// Bản nháp (chưa gửi)
   PENDING /// Chờ thanh toán
   PAID /// Đã thanh toán
-  REFUNDED /// Đã hoàn tiền
+  OVERDUE /// Quá hạn
   CANCELLED /// Đã huỷ
 }
 
-/// Phương thức thanh toán
-enum PaymentMethod {
-  CASH /// Tiền mặt
-  BANK_TRANSFER /// Chuyển khoản
-  MOMO /// Ví MoMo
-  ZALOPAY /// Ví ZaloPay
+/// Loại khoản phí trong hoá đơn
+enum FeeType {
+  RENT /// Tiền phòng
+  ELECTRICITY /// Tiền điện
+  WATER /// Tiền nước
+  CLEANING /// Vệ sinh
+  INTERNET /// Internet
+  ELEVATOR /// Thang máy
+  MOTORCYCLE /// Gửi xe máy
+  OTHER /// Khác
+}
+
+/// Trạng thái giao dịch chuyển khoản
+enum TransferStatus {
+  MATCHED /// Đã khớp hoá đơn
+  UNMATCHED /// Chưa khớp
+  DUPLICATE /// Trùng lặp
+  REVIEW /// Cần xem xét
+}
+
+/// Nguồn giao dịch
+enum TransferSource {
+  WEBHOOK /// Từ webhook ngân hàng
+  MANUAL /// Nhập tay
 }
 
 // ------------------------------------------------------------
 // Models
 // ------------------------------------------------------------
 
-/// Bệnh nhân
-model Patient {
-  id        String    @id @default(cuid())
-  code      String    @unique /// Mã bệnh nhân (BN-xxxx)
-  name      String /// Họ tên
-  dob       DateTime? /// Ngày sinh
-  phone     String? /// Số điện thoại
-  email     String?
-  address   String?
-  payments  Payment[]
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+/// Tài khoản đăng nhập
+model User {
+  id                  String     @id @default(cuid())
+  email               String     @unique
+  passwordHash        String
+  name                String
+  role                UserRole   @default(TENANT)
+  isActive            Boolean    @default(true)
+  mustChangePassword  Boolean    @default(false)
+  failedAttempts      Int        @default(0)
+  lockedUntil         DateTime?
+  tenant              Tenant?
+  auditLogs           AuditLog[]
+  createdAt           DateTime   @default(now())
+  updatedAt           DateTime   @updatedAt
 
-  @@index([name])
+  @@index([role])
 }
 
-/// Dịch vụ / hạng mục thu phí
-model Service {
-  id          String        @id @default(cuid())
-  code        String        @unique /// Mã dịch vụ (DV-xxxx)
-  name        String /// Tên dịch vụ
-  description String?
-  unit        String        @default("lần") /// Đơn vị tính
-  price       Decimal       @db.Decimal(15, 0) /// Đơn giá (VND)
-  isActive    Boolean       @default(true)
-  items       PaymentItem[]
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+/// Hồ sơ người thuê (gắn 1-1 với tài khoản)
+model Tenant {
+  id        String   @id @default(cuid())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String   @unique
+  fullName  String
+  phone     String?
+  idCard    String?
+  note      String?
+  leases    Lease[]
+  invoices  Invoice[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([fullName])
+  @@index([phone])
 }
 
-/// Phiếu thanh toán
-model Payment {
-  id          String        @id @default(cuid())
-  code        String        @unique /// Mã phiếu thu (PT-xxxx)
-  patient     Patient       @relation(fields: [patientId], references: [id], onDelete: Restrict)
-  patientId   String
-  status      PaymentStatus @default(PENDING)
-  method      PaymentMethod @default(CASH)
-  totalAmount Decimal       @db.Decimal(15, 0) /// Tổng tiền (VND)
-  note        String?
-  paidAt      DateTime? /// Thời điểm thanh toán
-  items       PaymentItem[]
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+/// Phòng trọ
+model Room {
+  id            String          @id @default(cuid())
+  number        String          @unique /// Số phòng (102, 201...)
+  floor         Int
+  baseRent      Decimal         @default(0) @db.Decimal(15, 0) /// Giá phòng mặc định (VND)
+  status        RoomStatus      @default(VACANT)
+  isActive      Boolean         @default(true)
+  leases        Lease[]
+  meterReadings MeterReading[]
+  invoices      Invoice[]
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
 
-  @@index([patientId])
+  @@index([floor])
+}
+
+/// Hợp đồng thuê (ai chuyển đến, khi nào)
+model Lease {
+  id              String      @id @default(cuid())
+  room            Room        @relation(fields: [roomId], references: [id], onDelete: Restrict)
+  roomId          String
+  tenant          Tenant      @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  tenantId        String
+  startDate       DateTime /// Ngày chuyển đến
+  endDate         DateTime? /// Ngày chuyển đi (null = còn ở)
+  status          LeaseStatus @default(ACTIVE)
+  peopleCount     Int         @default(1) /// Số người ở
+  motorcycleCount Int         @default(0) /// Số xe máy
+  deposit         Decimal     @default(0) @db.Decimal(15, 0) /// Tiền cọc (VND)
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  @@index([roomId])
+  @@index([tenantId])
+}
+
+/// Kỳ thanh toán (theo tháng)
+model BillingPeriod {
+  id            String              @id @default(cuid())
+  code          String              @unique /// "2026-08"
+  month         Int /// 1-12
+  year          Int
+  startDate     DateTime
+  endDate       DateTime
+  dueDate       DateTime /// Hạn thanh toán (tháng sau)
+  status        BillingPeriodStatus @default(OPEN)
+  meterReadings MeterReading[]
+  invoices      Invoice[]
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+
+  @@unique([month, year])
+}
+
+/// Chỉ số công tơ điện/nước theo phòng trong một kỳ
+model MeterReading {
+  id              String        @id @default(cuid())
+  room            Room          @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  roomId          String
+  billingPeriod   BillingPeriod @relation(fields: [billingPeriodId], references: [id], onDelete: Cascade)
+  billingPeriodId String
+  electricityOld  Int           @default(0) /// Số điện cũ
+  electricityNew  Int           @default(0) /// Số điện mới
+  waterOld        Int           @default(0) /// Số nước cũ
+  waterNew        Int           @default(0) /// Số nước mới
+  peopleCount     Int           @default(1)
+  motorcycleCount Int           @default(0)
+  recordedById    String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@unique([roomId, billingPeriodId])
+  @@index([billingPeriodId])
+}
+
+/// Hoá đơn tiền phòng (mỗi phòng mỗi kỳ một hoá đơn)
+model Invoice {
+  id              String          @id @default(cuid())
+  code            String          @unique /// "HD-2608-102"
+  room            Room            @relation(fields: [roomId], references: [id], onDelete: Restrict)
+  roomId          String
+  billingPeriod   BillingPeriod   @relation(fields: [billingPeriodId], references: [id], onDelete: Restrict)
+  billingPeriodId String
+  tenant          Tenant?         @relation(fields: [tenantId], references: [id], onDelete: SetNull)
+  tenantId        String?
+  status          InvoiceStatus   @default(DRAFT)
+  dueDate         DateTime
+  totalAmount     Decimal         @db.Decimal(15, 0)
+  paidAmount      Decimal         @default(0) @db.Decimal(15, 0)
+  note            String?
+  paidAt          DateTime?
+  items           InvoiceItem[]
+  transfers       TransferRecord[]
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  @@index([roomId])
+  @@index([billingPeriodId])
   @@index([status])
+  @@index([tenantId])
+}
+
+/// Chi tiết từng khoản phí trong hoá đơn
+model InvoiceItem {
+  id          String   @id @default(cuid())
+  invoice     Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  invoiceId   String
+  feeType     FeeType
+  description String
+  quantity    Int      @default(1)
+  unitPrice   Decimal  @db.Decimal(15, 0)
+  total       Decimal  @db.Decimal(15, 0)
+
+  @@index([invoiceId])
+}
+
+/// Tài khoản ngân hàng nhận tiền của chủ nhà
+model BankAccount {
+  id            String   @id @default(cuid())
+  bankName      String
+  bankCode      String /// Mã BIN ngân hàng (dùng cho VietQR)
+  accountNumber String
+  accountName   String
+  isActive      Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+/// Bản ghi giao dịch chuyển khoản (từ webhook hoặc nhập tay)
+model TransferRecord {
+  id            String         @id @default(cuid())
+  externalId    String?        @unique /// ID giao dịch từ webhook (chống trùng)
+  invoice       Invoice?       @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
+  invoiceId     String?
+  amount        Decimal        @db.Decimal(15, 0)
+  content       String? /// Nội dung chuyển khoản
+  sourceAccount String?
+  transferAt    DateTime?
+  status        TransferStatus @default(REVIEW)
+  source        TransferSource @default(WEBHOOK)
+  note          String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  @@index([invoiceId])
   @@index([createdAt])
 }
 
-/// Chi tiết dịch vụ trong một phiếu thanh toán
-model PaymentItem {
-  id        String  @id @default(cuid())
-  payment   Payment @relation(fields: [paymentId], references: [id], onDelete: Cascade)
-  paymentId String
-  service   Service @relation(fields: [serviceId], references: [id], onDelete: Restrict)
-  serviceId String
-  quantity  Int     @default(1)
-  unitPrice Decimal @db.Decimal(15, 0)
-  total     Decimal @db.Decimal(15, 0)
+/// Nhật ký hành động (audit trail)
+model AuditLog {
+  id         String   @id @default(cuid())
+  actor      User?    @relation(fields: [actorId], references: [id], onDelete: SetNull)
+  actorId    String?
+  action     String
+  entityType String?
+  entityId   String?
+  metadata   Json?
+  ip         String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
 
-  @@index([paymentId])
-  @@index([serviceId])
+  @@index([createdAt])
+  @@index([actorId])
+}
+
+/// Cài đặt hệ thống (đơn giá, ngày hạn mặc định...)
+model Setting {
+  key       String   @id
+  value     Json
+  updatedAt DateTime @updatedAt
 }

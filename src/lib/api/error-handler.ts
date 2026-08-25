@@ -1,4 +1,6 @@
 import { ZodError } from "zod";
+import { AuthError } from "@/lib/auth/errors";
+import { DomainError } from "./errors";
 import { fail } from "./response";
 
 interface PrismaErrorLike {
@@ -10,6 +12,10 @@ interface PrismaErrorLike {
  * Trả về NextResponse với message thân thiện và status phù hợp.
  */
 export function handleApiError(error: unknown) {
+    if (error instanceof AuthError || error instanceof DomainError) {
+        return fail(error.message, error.status);
+    }
+
     if (error instanceof ZodError) {
         return fail("Dữ liệu không hợp lệ", 422, error.flatten().fieldErrors);
     }

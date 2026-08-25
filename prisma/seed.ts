@@ -1,97 +1,82 @@
 import "dotenv/config";
 import { PrismaClient } from "../src/generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
+import bcrypt from "bcryptjs";
 
 /**
- * Seed script — tạo dữ liệu mẫu để phát triển.
+ * Seed script — tạo 38 phòng cố định, cài đặt đơn giá mặc định,
+ * và một tài khoản ADMIN mặc định.
  * Chạy bằng: npm run db:seed
  */
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 const prisma = new PrismaClient({ adapter });
 
+// Danh sách 38 phòng: tầng 1: 102-105; tầng 2-5: x01-x06; tầng 6-7: x01-x05.
+const FLOORS: Record<number, number[]> = {
+    1: [102, 103, 104, 105],
+    2: [201, 202, 203, 204, 205, 206],
+    3: [301, 302, 303, 304, 305, 306],
+    4: [401, 402, 403, 404, 405, 406],
+    5: [501, 502, 503, 504, 505, 506],
+    6: [601, 602, 603, 604, 605],
+    7: [701, 702, 703, 704, 705],
+};
+
 async function main() {
     console.log("🧹 Xoá dữ liệu cũ...");
-    await prisma.paymentItem.deleteMany();
-    await prisma.payment.deleteMany();
-    await prisma.service.deleteMany();
-    await prisma.patient.deleteMany();
+    await prisma.transferRecord.deleteMany();
+    await prisma.invoiceItem.deleteMany();
+    await prisma.invoice.deleteMany();
+    await prisma.meterReading.deleteMany();
+    await prisma.billingPeriod.deleteMany();
+    await prisma.lease.deleteMany();
+    await prisma.tenant.deleteMany();
+    await prisma.bankAccount.deleteMany();
+    await prisma.auditLog.deleteMany();
+    await prisma.user.deleteMany();
+    await prisma.room.deleteMany();
+    await prisma.setting.deleteMany();
 
-    console.log("📦 Tạo dịch vụ...");
-    const [kham, xetNghiem, sieuAm, xquang] = await Promise.all([
-        prisma.service.create({
-            data: { code: "DV-001", name: "Khám bệnh", unit: "lần", price: 200000 },
-        }),
-        prisma.service.create({
-            data: { code: "DV-002", name: "Xét nghiệm máu", unit: "lần", price: 150000 },
-        }),
-        prisma.service.create({
-            data: { code: "DV-003", name: "Siêu âm", unit: "lần", price: 300000 },
-        }),
-        prisma.service.create({
-            data: { code: "DV-004", name: "Chụp X-quang", unit: "lần", price: 250000 },
-        }),
-    ]);
+    console.log("🏢 Tạo 38 phòng...");
+    for (const [floor, numbers] of Object.entries(FLOORS)) {
+        for (const number of numbers) {
+            await prisma.room.create({
+                data: {
+                    number: String(number),
+                    floor: Number(floor),
+                    baseRent: 3000000,
+                    status: "VACANT",
+                },
+            });
+        }
+    }
 
-    console.log("👤 Tạo bệnh nhân...");
-    const [bnA, bnB, bnC] = await Promise.all([
-        prisma.patient.create({
-            data: { code: "BN-001", name: "Nguyễn Văn A", phone: "0900000001", dob: new Date("1990-01-15") },
-        }),
-        prisma.patient.create({
-            data: { code: "BN-002", name: "Trần Thị B", phone: "0900000002", dob: new Date("1985-06-20") },
-        }),
-        prisma.patient.create({
-            data: { code: "BN-003", name: "Lê Văn C", phone: "0900000003", dob: new Date("1995-11-02") },
-        }),
-    ]);
-
-    console.log("💳 Tạo phiếu thanh toán...");
-    await prisma.payment.create({
+    console.log("⚙️ Cài đặt đơn giá mặc định...");
+    await prisma.setting.create({
         data: {
-            code: "PT-2026-00001",
-            patientId: bnA.id,
-            status: "PAID",
-            method: "CASH",
-            totalAmount: 350000,
-            paidAt: new Date(),
-            items: {
-                create: [
-                    { serviceId: kham.id, quantity: 1, unitPrice: 200000, total: 200000 },
-                    { serviceId: xetNghiem.id, quantity: 1, unitPrice: 150000, total: 150000 },
-                ],
+            key: "fees",
+            value: {
+                electricityUnitPrice: 3500,
+                waterUnitPrice: 25000,
+                motorcycleUnitPrice: 100000,
+                cleaningFee: 30000,
+                internetFee: 100000,
+                elevatorFee: 50000,
+                dueDay: 5,
             },
         },
     });
 
-    await prisma.payment.create({
+    console.log("👤 Tạo tài khoản ADMIN mặc định (admin@tro.vn / admin123)...");
+    const passwordHash = await bcrypt.hash("admin123", 12);
+    await prisma.user.create({
         data: {
-            code: "PT-2026-00002",
-            patientId: bnB.id,
-            status: "PAID",
-            method: "BANK_TRANSFER",
-            totalAmount: 550000,
-            paidAt: new Date(),
-            items: {
-                create: [
-                    { serviceId: sieuAm.id, quantity: 1, unitPrice: 300000, total: 300000 },
-                    { serviceId: xquang.id, quantity: 1, unitPrice: 250000, total: 250000 },
-                ],
-            },
-        },
-    });
-
-    await prisma.payment.create({
-        data: {
-            code: "PT-2026-00003",
-            patientId: bnC.id,
-            status: "PENDING",
-            method: "CASH",
-            totalAmount: 200000,
-            note: "Hẹn thanh toán sau",
-            items: {
-                create: [{ serviceId: kham.id, quantity: 1, unitPrice: 200000, total: 200000 }],
-            },
+            email: "admin@tro.vn",
+            passwordHash,
+            name: "Chủ nhà",
+            role: "ADMIN",
+            mustChangePassword: true,
         },
     });
 

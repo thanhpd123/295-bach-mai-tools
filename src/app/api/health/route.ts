@@ -1,6 +1,7 @@
 import { ok } from "@/lib/api/response";
 
-/** Endpoint kiểm tra sức khoẻ hệ thống (dùng cho health-check). */
+/** Endpoint kiểm tra sức khoẻ hệ thống (dùng cho health-check).
+ *  Không lộ thông tin nội bộ (uptime, phiên bản, cấu hình). */
 export const dynamic = "force-dynamic";
 
 export async function GET() {
@@ -8,6 +9,5 @@ export async function GET() {
         status: "ok",
         service: "manager-payment-tools",
         timestamp: new Date().toISOString(),
-        uptime: process.uptime(),
     });
 }
