@@ -4,8 +4,8 @@ import { processSepayWebhook } from "@/lib/services/sepay.service";
 import type { NextRequest } from "next/server";
 
 /**
- * Webhook SePay (đường dẫn cũ, tương thích).
- * Đường dẫn chính đã chuyển sang /hooks/sepay-payment.
+ * Webhook SePay — trỏ từ SePay về: https://<domain>/hooks/sepay-payment
+ * POST: nhận giao dịch chuyển khoản và đối soát tự động vào hoá đơn.
  */
 export const dynamic = "force-dynamic";
 
@@ -17,4 +17,9 @@ export async function POST(request: NextRequest) {
     } catch (error) {
         return handleApiError(error);
     }
+}
+
+/** GET dùng để kiểm tra kết nối webhook. */
+export async function GET() {
+    return ok({ status: "ok" });
 }
