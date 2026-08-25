@@ -9,6 +9,9 @@ export default defineConfig({
     path: "prisma/migrations",
   },
   datasource: {
-    url: process.env["DATABASE_URL"],
+    // Prisma CLI (migrate/db push/introspect) cần kết nối session-mode (port 5432).
+    // Pooler pgbouncer (port 6543) không hỗ trợ đầy đủ lệnh DDL của migration.
+    // Runtime query dùng DATABASE_URL (pooler) qua adapter trong src/lib/db.ts.
+    url: process.env["DIRECT_URL"],
   },
 });
