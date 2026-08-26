@@ -10,7 +10,7 @@ import type { LoginResult } from "@/types";
 
 export function LoginForm() {
     const router = useRouter();
-    const [email, setEmail] = useState("");
+    const [account, setAccount] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
@@ -23,9 +23,18 @@ export function LoginForm() {
         try {
             const result = await apiFetch<LoginResult>("/api/auth/login", {
                 method: "POST",
-                body: JSON.stringify({ email, password }),
+                body: JSON.stringify({ account, password }),
             });
-            router.push(result.redirectTo);
+            // Bắt buộc đổi mật khẩu lần đầu (tài khoản mới hoặc vừa được admin reset).
+            if (result.user.mustChangePassword) {
+                router.push(
+                    result.user.role === "ADMIN"
+                        ? "/dashboard"
+                        : "/app/change-password",
+                );
+            } else {
+                router.push(result.redirectTo);
+            }
             router.refresh();
         } catch (err) {
             setError(err instanceof Error ? err.message : "Đăng nhập thất bại");
@@ -39,17 +48,17 @@ export function LoginForm() {
             className="space-y-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
         >
             <div className="space-y-2">
-                <label htmlFor="email" className="text-sm font-medium text-slate-700">
-                    Email
+                <label htmlFor="account" className="text-sm font-medium text-slate-700">
+                    Tài khoản
                 </label>
                 <Input
-                    id="email"
-                    type="email"
-                    autoComplete="email"
+                    id="account"
+                    type="text"
+                    autoComplete="username"
                     required
-                    value={email}
-                    onChange={(event) => setEmail(event.target.value)}
-                    placeholder="ban@vi-du.vn"
+                    value={account}
+                    onChange={(event) => setAccount(event.target.value)}
+                    placeholder="Tên tài khoản hoặc email"
                 />
             </div>
 

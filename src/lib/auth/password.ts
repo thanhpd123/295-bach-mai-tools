@@ -14,3 +14,13 @@ export async function verifyPassword(
 ): Promise<boolean> {
     return bcrypt.compare(plain, hash);
 }
+
+/**
+ * Hash giả (cùng 12 vòng) dùng để cân bằng thời gian phản hồi khi tài khoản
+ * không tồn tại / bị vô hiệu hoá / đang bị khoá — chống tấn công liệt kê tài khoản
+ * qua thời gian (timing-based user enumeration).
+ */
+export const DUMMY_PASSWORD_HASH = bcrypt.hashSync(
+    "dummy-password-for-timing",
+    SALT_ROUNDS,
+);

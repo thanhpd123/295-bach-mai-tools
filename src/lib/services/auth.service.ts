@@ -1,6 +1,10 @@
 import { db } from "@/lib/db";
 import { AuthError } from "@/lib/auth/errors";
-import { hashPassword, verifyPassword } from "@/lib/auth/password";
+import {
+    DUMMY_PASSWORD_HASH,
+    hashPassword,
+    verifyPassword,
+} from "@/lib/auth/password";
 import { createSession } from "@/lib/auth/session";
 import { writeAudit } from "@/lib/services/audit.service";
 import type { ChangePasswordInput, LoginInput } from "@/lib/validation/auth";
@@ -9,18 +13,38 @@ import type { LoginResult, SessionUser } from "@/types";
 const MAX_FAILED_ATTEMPTS = 5;
 const LOCK_MINUTES = 15;
 
-/** Đăng nhập bằng email + mật khẩu; tự khoá tài khoản sau 5 lần sai. */
+/** Đăng nhập bằng tên tài khoản hoặc email + mật khẩu; tự khoá tài khoản sau 5 lần sai. */
 export async function login(
     input: LoginInput,
     clientInfo: { ip: string | null; userAgent: string | null },
 ): Promise<LoginResult> {
-    const user = await db.user.findUnique({ where: { email: input.email } });
+    const account = input.account.trim();
+    const emailLookup = account.toLowerCase();
+    const user = await db.user.findFirst({
+        where: {
+            OR: [
+                { email: emailLookup },
+                { username: { equals: account, mode: "insensitive" } },
+            ],
+        },
+    });
 
-    if (!user || !user.isActive) {
-        throw new AuthError(401, "Email hoặc mật khẩu không đúng");
+    const locked =
+        user !== null &&
+        user.lockedUntil !== null &&
+        user.lockedUntil > new Date();
+
+    // Chống timing-based user enumeration: luôn chạy một phép bcrypt.compare,
+    // dùng hash giả khi tài khoản không tồn tại / bị vô hiệu hoá / đang bị khoá.
+    if (!user || !user.isActive || locked) {
+        await verifyPassword(input.password, DUMMY_PASSWORD_HASH);
     }
 
-    if (user.lockedUntil && user.lockedUntil > new Date()) {
+    if (!user || !user.isActive) {
+        throw new AuthError(401, "Tài khoản hoặc mật khẩu không đúng");
+    }
+
+    if (locked) {
         throw new AuthError(
             423,
             "Tài khoản tạm khoá do nhập sai nhiều lần, vui lòng thử lại sau",
@@ -51,7 +75,7 @@ export async function login(
             ip: clientInfo.ip,
             userAgent: clientInfo.userAgent,
         });
-        throw new AuthError(401, "Email hoặc mật khẩu không đúng");
+        throw new AuthError(401, "Tài khoản hoặc mật khẩu không đúng");
     }
 
     await db.user.update({
