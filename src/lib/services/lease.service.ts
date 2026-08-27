@@ -94,6 +94,17 @@ export async function createLease(input: CreateLeaseInput): Promise<LeaseDto> {
             where: { id: input.roomId },
             data: { status: "OCCUPIED" },
         });
+        // Tái kích hoạt tài khoản nếu người thuê quay lại (đã bị khoá khi chuyển đi).
+        const tenant = await tx.tenant.findUnique({
+            where: { id: input.tenantId },
+            select: { userId: true },
+        });
+        if (tenant) {
+            await tx.user.update({
+                where: { id: tenant.userId },
+                data: { isActive: true },
+            });
+        }
         return created;
     });
 
@@ -124,6 +135,23 @@ export async function endLease(
                 where: { id: existing.roomId },
                 data: { status: "VACANT" },
             });
+        }
+
+        // Khoá tài khoản nếu người thuê không còn hợp đồng ACTIVE nào khác.
+        const otherTenantLease = await tx.lease.count({
+            where: { tenantId: existing.tenantId, status: "ACTIVE", id: { not: id } },
+        });
+        if (otherTenantLease === 0) {
+            const tenant = await tx.tenant.findUnique({
+                where: { id: existing.tenantId },
+                select: { userId: true },
+            });
+            if (tenant) {
+                await tx.user.update({
+                    where: { id: tenant.userId },
+                    data: { isActive: false },
+                });
+            }
         }
         return updated;
     });

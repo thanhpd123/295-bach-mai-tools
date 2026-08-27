@@ -16,6 +16,7 @@ export function TenantsManager() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [message, setMessage] = useState<string | null>(null);
+    const [filter, setFilter] = useState<"all" | "active" | "inactive">("all");
 
     // Form tạo người thuê
     const [form, setForm] = useState({
@@ -30,8 +31,10 @@ export function TenantsManager() {
 
     const load = useCallback(async () => {
         try {
+            const params = new URLSearchParams({ limit: "200" });
+            if (filter !== "all") params.set("status", filter);
             const [tenantRes, roomRes] = await Promise.all([
-                apiFetch<Paginated<TenantDto>>("/api/tenants?limit=200"),
+                apiFetch<Paginated<TenantDto>>(`/api/tenants?${params.toString()}`),
                 apiFetch<Paginated<RoomDto>>("/api/rooms?limit=200"),
             ]);
             setTenants(tenantRes.data);
@@ -41,7 +44,7 @@ export function TenantsManager() {
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [filter]);
 
     useEffect(() => {
         // eslint-disable-next-line react-hooks/set-state-in-effect -- tải dữ liệu bất đồng bộ khi mount
@@ -98,6 +101,38 @@ export function TenantsManager() {
             showMessage("Đã đặt lại mật khẩu.");
         } catch (err) {
             setError(err instanceof Error ? err.message : "Đặt lại thất bại");
+        }
+    };
+
+    const toggleActive = async (tenant: TenantDto) => {
+        try {
+            await apiFetch(`/api/tenants/${tenant.id}`, {
+                method: "PATCH",
+                body: JSON.stringify({ isActive: !tenant.isActive }),
+            });
+            showMessage(
+                tenant.isActive ? "Đã khoá tài khoản." : "Đã kích hoạt tài khoản.",
+            );
+            await load();
+        } catch (err) {
+            setError(err instanceof Error ? err.message : "Cập nhật thất bại");
+        }
+    };
+
+    const removeTenant = async (tenant: TenantDto) => {
+        if (
+            !window.confirm(
+                `Xoá ${tenant.fullName}? Chỉ xoá được khi chưa có hợp đồng/hoá đơn.`,
+            )
+        ) {
+            return;
+        }
+        try {
+            await apiFetch(`/api/tenants/${tenant.id}`, { method: "DELETE" });
+            showMessage("Đã xoá người thuê.");
+            await load();
+        } catch (err) {
+            setError(err instanceof Error ? err.message : "Xoá thất bại");
         }
     };
 
@@ -197,6 +232,26 @@ export function TenantsManager() {
                 </Button>
             </form>
 
+            {/* Bộ lọc trạng thái */}
+            <div className="flex flex-wrap items-center gap-2">
+                {(
+                    [
+                        ["all", "Tất cả"],
+                        ["active", "Đang hoạt động"],
+                        ["inactive", "Đã khoá"],
+                    ] as const
+                ).map(([value, label]) => (
+                    <Button
+                        key={value}
+                        size="sm"
+                        variant={filter === value ? "primary" : "outline"}
+                        onClick={() => setFilter(value)}
+                    >
+                        {label}
+                    </Button>
+                ))}
+            </div>
+
             {/* Danh sách */}
             <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
                 {loading ? (
@@ -237,13 +292,31 @@ export function TenantsManager() {
                                             </Badge>
                                         </td>
                                         <td className="px-4 py-3">
-                                            <Button
-                                                size="sm"
-                                                variant="outline"
-                                                onClick={() => resetPassword(tenant)}
-                                            >
-                                                Đặt lại MK
-                                            </Button>
+                                            <div className="flex flex-wrap gap-1.5">
+                                                <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                    onClick={() => resetPassword(tenant)}
+                                                >
+                                                    Đặt lại MK
+                                                </Button>
+                                                <Button
+                                                    size="sm"
+                                                    variant={
+                                                        tenant.isActive ? "outline" : "secondary"
+                                                    }
+                                                    onClick={() => toggleActive(tenant)}
+                                                >
+                                                    {tenant.isActive ? "Khoá" : "Kích hoạt"}
+                                                </Button>
+                                                <Button
+                                                    size="sm"
+                                                    variant="destructive"
+                                                    onClick={() => removeTenant(tenant)}
+                                                >
+                                                    Xoá
+                                                </Button>
+                                            </div>
                                         </td>
                                     </tr>
                                 ))}

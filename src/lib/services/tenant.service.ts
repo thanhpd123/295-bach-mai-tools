@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import { hashPassword } from "@/lib/auth/password";
 import { serializeDate } from "@/lib/serializers";
+import { DomainError } from "@/lib/api/errors";
 import type {
     CreateTenantInput,
     ResetPasswordInput,
@@ -47,15 +48,20 @@ export async function listTenants(
 ): Promise<Paginated<TenantDto>> {
     const { page, limit, search } = query;
 
-    const where = search
-        ? {
-            OR: [
-                { fullName: { contains: search, mode: "insensitive" as const } },
-                { phone: { contains: search } },
-                { user: { username: { contains: search, mode: "insensitive" as const } } },
-            ],
-        }
-        : {};
+    const where = {
+        ...(search
+            ? {
+                  OR: [
+                      { fullName: { contains: search, mode: "insensitive" as const } },
+                      { phone: { contains: search } },
+                      { user: { username: { contains: search, mode: "insensitive" as const } } },
+                  ],
+              }
+            : {}),
+        ...(query.status
+            ? { user: { isActive: query.status === "active" } }
+            : {}),
+    };
 
     const [total, tenants] = await Promise.all([
         db.tenant.count({ where }),
@@ -160,8 +166,31 @@ export async function resetTenantPassword(
     return serializeTenant(tenant as unknown as RawTenant);
 }
 
+/**
+ * Xoá người thuê + tài khoản đăng nhập. Chỉ cho phép khi chưa có hợp đồng/hoá đơn
+ * (để giữ lịch sử truy vết); người đã có lịch sử thì hãy vô hiệu hoá thay vì xoá.
+ */
 export async function deleteTenant(id: string): Promise<void> {
-    await db.tenant.delete({ where: { id } });
+    const tenant = await db.tenant.findUnique({
+        where: { id },
+        select: { id: true, userId: true },
+    });
+    if (!tenant) throw new DomainError(404, "Không tìm thấy người thuê");
+
+    const [leaseCount, invoiceCount] = await Promise.all([
+        db.lease.count({ where: { tenantId: id } }),
+        db.invoice.count({ where: { tenantId: id } }),
+    ]);
+    if (leaseCount > 0 || invoiceCount > 0) {
+        throw new DomainError(
+            409,
+            "Không thể xoá người thuê đã có hợp đồng hoặc hoá đơn. Hãy vô hiệu hoá tài khoản thay vì xoá để giữ lịch sử.",
+        );
+    }
+
+    // Xoá User sẽ cascade xoá Tenant (schema: Tenant.user onDelete Cascade)
+    // → không để lại tài khoản mồ côi.
+    await db.user.delete({ where: { id: tenant.userId } });
 }
 
 export async function getTenantByUserId(userId: string) {
