@@ -4,7 +4,7 @@ export const loginSchema = z.object({
     account: z
         .string()
         .trim()
-        .min(1, "Vui lòng nhập tên tài khoản hoặc email")
+        .min(1, "Vui lòng nhập tên đăng nhập hoặc số điện thoại")
         .max(200),
     password: z.string().min(1, "Vui lòng nhập mật khẩu").max(200),
 });

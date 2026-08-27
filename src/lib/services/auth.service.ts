@@ -13,18 +13,17 @@ import type { LoginResult, SessionUser } from "@/types";
 const MAX_FAILED_ATTEMPTS = 5;
 const LOCK_MINUTES = 15;
 
-/** Đăng nhập bằng tên tài khoản hoặc email + mật khẩu; tự khoá tài khoản sau 5 lần sai. */
+/** Đăng nhập bằng tên đăng nhập (hoặc SĐT) + mật khẩu; tự khoá tài khoản sau 5 lần sai. */
 export async function login(
     input: LoginInput,
     clientInfo: { ip: string | null; userAgent: string | null },
 ): Promise<LoginResult> {
     const account = input.account.trim();
-    const emailLookup = account.toLowerCase();
     const user = await db.user.findFirst({
         where: {
             OR: [
-                { email: emailLookup },
                 { username: { equals: account, mode: "insensitive" } },
+                { tenant: { is: { phone: account } } },
             ],
         },
     });

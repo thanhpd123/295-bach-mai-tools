@@ -83,8 +83,7 @@ enum TransferSource {
 /// Tài khoản đăng nhập
 model User {
   id                  String     @id @default(cuid())
-  email               String     @unique
-  username            String?    @unique /// Tên đăng nhập (tuỳ chọn, thay cho email khi đăng nhập)
+  username            String     @unique /// Tên đăng nhập (hoặc SĐT) dùng để đăng nhập
   passwordHash        String
   name                String
   role                UserRole   @default(TENANT)

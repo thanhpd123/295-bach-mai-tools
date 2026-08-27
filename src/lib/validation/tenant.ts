@@ -6,7 +6,11 @@ export const createTenantSchema = z.object({
     phone: z.string().trim().max(20).optional(),
     idCard: z.string().trim().max(30).optional(),
     note: z.string().trim().max(500).optional(),
-    email: z.string().trim().toLowerCase().email("Email không hợp lệ"),
+    username: z
+        .string()
+        .trim()
+        .min(3, "Tên đăng nhập tối thiểu 3 ký tự")
+        .max(50, "Tên đăng nhập tối đa 50 ký tự"),
     password: z.string().min(8, "Mật khẩu tối thiểu 8 ký tự").max(200),
 });
 

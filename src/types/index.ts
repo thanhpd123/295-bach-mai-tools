@@ -27,7 +27,7 @@ export interface LoginResult {
 // ----- User / Tenant -----
 export interface UserDto {
     id: string;
-    email: string;
+    username: string;
     name: string;
     role: UserRole;
     isActive: boolean;
@@ -42,7 +42,7 @@ export interface TenantDto {
     phone: string | null;
     idCard: string | null;
     note: string | null;
-    email: string;
+    username: string;
     isActive: boolean;
     activeRoom: string | null;
     createdAt: string;

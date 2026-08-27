@@ -58,7 +58,7 @@ export function LoginForm() {
                     required
                     value={account}
                     onChange={(event) => setAccount(event.target.value)}
-                    placeholder="Tên tài khoản hoặc email"
+                    placeholder="Tên đăng nhập hoặc SĐT"
                 />
             </div>
 

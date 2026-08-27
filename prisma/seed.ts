@@ -121,7 +121,6 @@ async function main() {
     const passwordHash = await bcrypt.hash("bachmai295", 12);
     await prisma.user.create({
         data: {
-            email: "admin@tro.vn",
             username: "admin",
             passwordHash,
             name: "Chủ nhà",
@@ -140,7 +139,7 @@ async function main() {
     const [tenantUserA, tenantUserB] = await Promise.all([
         prisma.user.create({
             data: {
-                email: "nguyen.van.a@tro.vn",
+                username: "nguyenvana",
                 passwordHash: tenantPasswordHash,
                 name: "Nguyễn Văn A",
                 role: "TENANT",
@@ -148,7 +147,7 @@ async function main() {
         }),
         prisma.user.create({
             data: {
-                email: "tran.thi.b@tro.vn",
+                username: "tranthib",
                 passwordHash: tenantPasswordHash,
                 name: "Trần Thị B",
                 role: "TENANT",

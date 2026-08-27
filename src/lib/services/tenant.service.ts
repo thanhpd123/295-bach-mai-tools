@@ -22,7 +22,7 @@ type RawTenant = {
     idCard: string | null;
     note: string | null;
     createdAt: Date;
-    user: { email: string; isActive: boolean };
+    user: { username: string; isActive: boolean };
     leases: Array<{ room: { number: string } }>;
 };
 
@@ -34,7 +34,7 @@ function serializeTenant(tenant: RawTenant): TenantDto {
         phone: tenant.phone,
         idCard: tenant.idCard,
         note: tenant.note,
-        email: tenant.user.email,
+        username: tenant.user.username,
         isActive: tenant.user.isActive,
         activeRoom: tenant.leases[0]?.room.number ?? null,
         createdAt:
@@ -52,7 +52,7 @@ export async function listTenants(
             OR: [
                 { fullName: { contains: search, mode: "insensitive" as const } },
                 { phone: { contains: search } },
-                { user: { email: { contains: search, mode: "insensitive" as const } } },
+                { user: { username: { contains: search, mode: "insensitive" as const } } },
             ],
         }
         : {};
@@ -90,7 +90,7 @@ export async function getTenantById(id: string): Promise<TenantDto | null> {
     return tenant ? serializeTenant(tenant as unknown as RawTenant) : null;
 }
 
-/** Tạo người thuê kèm tài khoản đăng nhập (email + mật khẩu). */
+/** Tạo người thuê kèm tài khoản đăng nhập (tên đăng nhập + mật khẩu). */
 export async function createTenant(
     input: CreateTenantInput,
 ): Promise<TenantDto> {
@@ -104,7 +104,7 @@ export async function createTenant(
             note: input.note ?? null,
             user: {
                 create: {
-                    email: input.email,
+                    username: input.username,
                     passwordHash,
                     name: input.fullName,
                     role: "TENANT",

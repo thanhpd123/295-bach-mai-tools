@@ -22,7 +22,7 @@ export function TenantsManager() {
         fullName: "",
         phone: "",
         idCard: "",
-        email: "",
+        username: "",
         password: "",
     });
     // Form chuyển vào phòng
@@ -60,7 +60,7 @@ export function TenantsManager() {
                 method: "POST",
                 body: JSON.stringify(form),
             });
-            setForm({ fullName: "", phone: "", idCard: "", email: "", password: "" });
+            setForm({ fullName: "", phone: "", idCard: "", username: "", password: "" });
             showMessage("Đã tạo người thuê và tài khoản đăng nhập.");
             await load();
         } catch (err) {
@@ -138,11 +138,11 @@ export function TenantsManager() {
                     onChange={(e) => setForm({ ...form, idCard: e.target.value })}
                 />
                 <Input
-                    placeholder="Email đăng nhập *"
-                    type="email"
+                    placeholder="Tên đăng nhập *"
+                    type="text"
                     required
-                    value={form.email}
-                    onChange={(e) => setForm({ ...form, email: e.target.value })}
+                    value={form.username}
+                    onChange={(e) => setForm({ ...form, username: e.target.value })}
                 />
                 <Input
                     placeholder="Mật khẩu (≥8 ký tự) *"
@@ -210,7 +210,7 @@ export function TenantsManager() {
                                 <tr>
                                     <th className="px-4 py-3 font-medium">Họ tên</th>
                                     <th className="px-4 py-3 font-medium">SĐT liên hệ</th>
-                                    <th className="px-4 py-3 font-medium">Email</th>
+                                    <th className="px-4 py-3 font-medium">Tài khoản</th>
                                     <th className="px-4 py-3 font-medium">Phòng</th>
                                     <th className="px-4 py-3 font-medium">Trạng thái</th>
                                     <th className="px-4 py-3 font-medium">Thao tác</th>
@@ -226,7 +226,7 @@ export function TenantsManager() {
                                             {tenant.phone ?? "—"}
                                         </td>
                                         <td className="px-4 py-3 text-slate-700">
-                                            {tenant.email}
+                                            {tenant.username}
                                         </td>
                                         <td className="px-4 py-3 text-slate-700">
                                             {tenant.activeRoom ?? "—"}

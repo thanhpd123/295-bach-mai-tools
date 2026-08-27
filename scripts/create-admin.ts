@@ -7,7 +7,6 @@ import bcrypt from "bcryptjs";
  * Tạo/cập nhật tài khoản ADMIN — KHÔNG xoá dữ liệu (an toàn chạy trên production).
  * Đọc thông tin đăng nhập từ biến môi trường:
  *   ADMIN_USERNAME (mặc định: admin)
- *   ADMIN_EMAIL    (mặc định: admin@tro.vn)
  *   ADMIN_PASSWORD (bắt buộc, tối thiểu 8 ký tự — không được hardcode trong repo)
  *   ADMIN_NAME     (mặc định: Chủ nhà)
  *
@@ -27,7 +26,6 @@ function requiredEnv(name: string): string {
 
 async function main() {
     const username = process.env.ADMIN_USERNAME ?? "admin";
-    const email = process.env.ADMIN_EMAIL ?? "admin@tro.vn";
     const password = requiredEnv("ADMIN_PASSWORD");
     const name = process.env.ADMIN_NAME ?? "Chủ nhà";
 
@@ -39,8 +37,8 @@ async function main() {
 
     const passwordHash = await bcrypt.hash(password, 12);
 
-    const existing = await prisma.user.findFirst({
-        where: { OR: [{ username }, { email }] },
+    const existing = await prisma.user.findUnique({
+        where: { username },
     });
 
     if (existing) {
@@ -48,7 +46,6 @@ async function main() {
             where: { id: existing.id },
             data: {
                 username,
-                email,
                 passwordHash,
                 name,
                 role: "ADMIN",
@@ -58,19 +55,18 @@ async function main() {
                 lockedUntil: null,
             },
         });
-        console.log(`✅ Đã cập nhật tài khoản ADMIN: ${username} (${email})`);
+        console.log(`✅ Đã cập nhật tài khoản ADMIN: ${username}`);
     } else {
         await prisma.user.create({
             data: {
                 username,
-                email,
                 passwordHash,
                 name,
                 role: "ADMIN",
                 mustChangePassword: false,
             },
         });
-        console.log(`✅ Đã tạo tài khoản ADMIN: ${username} (${email})`);
+        console.log(`✅ Đã tạo tài khoản ADMIN: ${username}`);
     }
 
     console.log("💡 Không in mật khẩu ra màn hình — hãy lưu mật khẩu ở nơi an toàn.");
