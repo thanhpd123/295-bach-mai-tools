@@ -8,13 +8,19 @@ import type { BillingPeriodDto, MeterReadingDto, RoomDto } from "@/types";
 
 type Values = Record<
     string,
-    { electricityNew: string; waterNew: string; people: string }
+    {
+        electricityOld: string;
+        electricityNew: string;
+        waterOld: string;
+        waterNew: string;
+        people: string;
+        motorcycle: string;
+    }
 >;
 
 export function BillingManager() {
     const [periods, setPeriods] = useState<BillingPeriodDto[]>([]);
     const [rooms, setRooms] = useState<RoomDto[]>([]);
-    const [readings, setReadings] = useState<MeterReadingDto[]>([]);
     const [selectedPeriodId, setSelectedPeriodId] = useState("");
     const [values, setValues] = useState<Values>({});
     const [message, setMessage] = useState<string | null>(null);
@@ -51,23 +57,43 @@ export function BillingManager() {
     const loadReadings = useCallback(async (periodId: string) => {
         if (!periodId) return;
         try {
-            const res = await apiFetch<MeterReadingDto[]>(
-                `/api/meter-readings?billingPeriodId=${periodId}`,
-            );
-            setReadings(res);
+            const res = await apiFetch<{
+                readings: MeterReadingDto[];
+                suggestions: Record<
+                    string,
+                    { electricityOld: number; waterOld: number }
+                >;
+            }>(`/api/meter-readings?billingPeriodId=${periodId}`);
+
             const map: Values = {};
-            for (const r of res) {
+            for (const r of res.readings) {
                 map[r.roomId] = {
+                    electricityOld: String(r.electricityOld),
                     electricityNew: String(r.electricityNew),
+                    waterOld: String(r.waterOld),
                     waterNew: String(r.waterNew),
                     people: String(r.peopleCount),
+                    motorcycle: String(r.motorcycleCount),
+                };
+            }
+            // Phòng chưa có bản ghi: tự điền chỉ số "cũ" từ kỳ trước / hợp đồng đã kết thúc.
+            for (const room of rooms) {
+                if (map[room.id]) continue;
+                const s = res.suggestions[room.id];
+                map[room.id] = {
+                    electricityOld: s ? String(s.electricityOld) : "",
+                    electricityNew: "",
+                    waterOld: s ? String(s.waterOld) : "",
+                    waterNew: "",
+                    people: "1",
+                    motorcycle: "0",
                 };
             }
             setValues(map);
         } catch (err) {
             setError(err instanceof Error ? err.message : "Không thể tải chỉ số");
         }
-    }, []);
+    }, [rooms]);
 
     const selectPeriod = (periodId: string) => {
         setSelectedPeriodId(periodId);
@@ -84,7 +110,6 @@ export function BillingManager() {
             await load();
             setSelectedPeriodId(period.id);
             setValues({});
-            setReadings([]);
         } catch (err) {
             setError(err instanceof Error ? err.message : "Tạo kỳ thất bại");
         }
@@ -93,14 +118,29 @@ export function BillingManager() {
     const saveReadings = async () => {
         setSaving(true);
         try {
+            const toNumber = (s: string) =>
+                s.trim() === "" ? undefined : Number(s);
             const readingsPayload = rooms
-                .filter((r) => values[r.id])
-                .map((r) => ({
-                    roomId: r.id,
-                    electricityNew: Number(values[r.id].electricityNew || 0),
-                    waterNew: Number(values[r.id].waterNew || 0),
-                    peopleCount: Number(values[r.id].people || 1),
-                }));
+                .filter((r) => {
+                    const v = values[r.id];
+                    return (
+                        v &&
+                        (v.electricityNew.trim() !== "" ||
+                            v.waterNew.trim() !== "")
+                    );
+                })
+                .map((r) => {
+                    const v = values[r.id];
+                    return {
+                        roomId: r.id,
+                        electricityOld: toNumber(v.electricityOld),
+                        electricityNew: Number(v.electricityNew || 0),
+                        waterOld: toNumber(v.waterOld),
+                        waterNew: Number(v.waterNew || 0),
+                        peopleCount: Number(v.people || 1),
+                        motorcycleCount: Number(v.motorcycle || 0),
+                    };
+                });
             await apiFetch("/api/meter-readings", {
                 method: "POST",
                 body: JSON.stringify({
@@ -132,13 +172,20 @@ export function BillingManager() {
         }
     };
 
-    const readingById = (roomId: string) =>
-        readings.find((r) => r.roomId === roomId);
-
     const setValue = (roomId: string, patch: Partial<Values[string]>) => {
         setValues((prev) => ({
             ...prev,
-            [roomId]: { ...(prev[roomId] ?? { electricityNew: "", waterNew: "", people: "1" }), ...patch },
+            [roomId]: {
+                ...(prev[roomId] ?? {
+                    electricityOld: "",
+                    electricityNew: "",
+                    waterOld: "",
+                    waterNew: "",
+                    people: "1",
+                    motorcycle: "0",
+                }),
+                ...patch,
+            },
         }));
     };
 
@@ -216,49 +263,82 @@ export function BillingManager() {
                                         <th className="px-4 py-2 font-medium">Phòng</th>
                                         <th className="px-4 py-2 font-medium">Điện cũ</th>
                                         <th className="px-4 py-2 font-medium">Điện mới</th>
+                                        <th className="px-4 py-2 font-medium">Điện dùng</th>
                                         <th className="px-4 py-2 font-medium">Nước cũ</th>
                                         <th className="px-4 py-2 font-medium">Nước mới</th>
+                                        <th className="px-4 py-2 font-medium">Nước dùng</th>
                                         <th className="px-4 py-2 font-medium">Số người</th>
+                                        <th className="px-4 py-2 font-medium">Số xe</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-100">
                                     {rooms.map((room) => {
-                                        const r = readingById(room.id);
                                         const v = values[room.id] ?? {
+                                            electricityOld: "",
                                             electricityNew: "",
+                                            waterOld: "",
                                             waterNew: "",
                                             people: "1",
+                                            motorcycle: "0",
                                         };
+                                        const elecOld = Number(v.electricityOld || 0);
+                                        const elecNew = Number(v.electricityNew || 0);
+                                        const waterOld = Number(v.waterOld || 0);
+                                        const waterNew = Number(v.waterNew || 0);
                                         return (
                                             <tr key={room.id} className="hover:bg-slate-50">
                                                 <td className="px-4 py-2 font-semibold text-slate-900">
                                                     {room.number}
                                                 </td>
-                                                <td className="px-4 py-2 text-slate-500">
-                                                    {r ? r.electricityOld : "tự động"}
+                                                <td className="px-4 py-2">
+                                                    <Input
+                                                        type="number"
+                                                        className="h-8 w-20"
+                                                        value={v.electricityOld}
+                                                        placeholder="0"
+                                                        onChange={(e) =>
+                                                            setValue(room.id, { electricityOld: e.target.value })
+                                                        }
+                                                    />
                                                 </td>
                                                 <td className="px-4 py-2">
                                                     <Input
                                                         type="number"
-                                                        className="h-8 w-24"
+                                                        className="h-8 w-20"
                                                         value={v.electricityNew}
+                                                        placeholder="0"
                                                         onChange={(e) =>
                                                             setValue(room.id, { electricityNew: e.target.value })
                                                         }
                                                     />
                                                 </td>
-                                                <td className="px-4 py-2 text-slate-500">
-                                                    {r ? r.waterOld : "tự động"}
+                                                <td className="px-4 py-2 tabular-nums text-slate-700">
+                                                    {elecNew - elecOld}
                                                 </td>
                                                 <td className="px-4 py-2">
                                                     <Input
                                                         type="number"
-                                                        className="h-8 w-24"
+                                                        className="h-8 w-20"
+                                                        value={v.waterOld}
+                                                        placeholder="0"
+                                                        onChange={(e) =>
+                                                            setValue(room.id, { waterOld: e.target.value })
+                                                        }
+                                                    />
+                                                </td>
+                                                <td className="px-4 py-2">
+                                                    <Input
+                                                        type="number"
+                                                        className="h-8 w-20"
                                                         value={v.waterNew}
+                                                        placeholder="0"
                                                         onChange={(e) =>
                                                             setValue(room.id, { waterNew: e.target.value })
                                                         }
                                                     />
+                                                </td>
+                                                <td className="px-4 py-2 tabular-nums text-slate-700">
+                                                    {waterNew - waterOld}
                                                 </td>
                                                 <td className="px-4 py-2">
                                                     <Input
@@ -267,6 +347,16 @@ export function BillingManager() {
                                                         value={v.people}
                                                         onChange={(e) =>
                                                             setValue(room.id, { people: e.target.value })
+                                                        }
+                                                    />
+                                                </td>
+                                                <td className="px-4 py-2">
+                                                    <Input
+                                                        type="number"
+                                                        className="h-8 w-16"
+                                                        value={v.motorcycle}
+                                                        onChange={(e) =>
+                                                            setValue(room.id, { motorcycle: e.target.value })
                                                         }
                                                     />
                                                 </td>

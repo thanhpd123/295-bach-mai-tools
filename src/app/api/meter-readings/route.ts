@@ -3,6 +3,7 @@ import { fail, ok } from "@/lib/api/response";
 import { requireAdmin } from "@/lib/auth/current-user";
 import { extractClientInfo, writeAudit } from "@/lib/services/audit.service";
 import {
+    getMeterReadingSuggestions,
     listMeterReadings,
     upsertMeterReadings,
 } from "@/lib/services/billing.service";
@@ -20,7 +21,11 @@ export async function GET(request: NextRequest) {
         if (!billingPeriodId) {
             return fail("Thiếu tham số billingPeriodId", 422);
         }
-        return ok(await listMeterReadings(billingPeriodId));
+        const [readings, suggestions] = await Promise.all([
+            listMeterReadings(billingPeriodId),
+            getMeterReadingSuggestions(billingPeriodId),
+        ]);
+        return ok({ readings, suggestions });
     } catch (error) {
         return handleApiError(error);
     }

@@ -216,6 +216,61 @@ export async function listMeterReadings(
     return readings.map(serializeMeterReading);
 }
 
+/**
+ * Gợi ý chỉ số "cũ" cho từng phòng khi nhập kỳ mới:
+ * lấy từ chỉ số mới của kỳ liền trước; nếu chưa có (phòng mới có người thuê)
+ * thì lấy từ endElectricity/endWater của hợp đồng đã kết thúc gần nhất.
+ */
+export async function getMeterReadingSuggestions(
+    billingPeriodId: string,
+): Promise<Record<string, { electricityOld: number; waterOld: number }>> {
+    const period = await db.billingPeriod.findUnique({
+        where: { id: billingPeriodId },
+    });
+    if (!period) throw new DomainError(404, "Không tìm thấy kỳ thanh toán");
+
+    const previousPeriod = await db.billingPeriod.findFirst({
+        where: {
+            OR: [
+                { year: { lt: period.year } },
+                { year: period.year, month: { lt: period.month } },
+            ],
+        },
+        orderBy: [{ year: "desc" }, { month: "desc" }],
+    });
+    const previousReadings = previousPeriod
+        ? await db.meterReading.findMany({
+            where: { billingPeriodId: previousPeriod.id },
+        })
+        : [];
+
+    const endedLeases = await db.lease.findMany({
+        where: { status: "ENDED" },
+        orderBy: { endDate: "desc" },
+    });
+
+    const map: Record<string, { electricityOld: number; waterOld: number }> =
+        {};
+    for (const r of previousReadings) {
+        map[r.roomId] = {
+            electricityOld: r.electricityNew,
+            waterOld: r.waterNew,
+        };
+    }
+    for (const lease of endedLeases) {
+        if (
+            !map[lease.roomId] &&
+            (lease.endElectricity != null || lease.endWater != null)
+        ) {
+            map[lease.roomId] = {
+                electricityOld: lease.endElectricity ?? 0,
+                waterOld: lease.endWater ?? 0,
+            };
+        }
+    }
+    return map;
+}
+
 export async function upsertMeterReadings(
     input: UpsertMeterReadingsInput,
     actorId: string,
@@ -242,12 +297,37 @@ export async function upsertMeterReadings(
         : [];
     const prevByRoom = new Map(previousReadings.map((r) => [r.roomId, r]));
 
+    // Nếu phòng chưa có chỉ số kỳ trước (người mới chuyển vào), dùng chỉ số cuối
+    // của hợp đồng đã kết thúc (endElectricity/endWater) làm chỉ số cũ.
+    const roomIds = input.readings.map((r) => r.roomId);
+    const endedLeases = await db.lease.findMany({
+        where: { roomId: { in: roomIds }, status: "ENDED" },
+        orderBy: { endDate: "desc" },
+    });
+    const endedByRoom = new Map<
+        string,
+        { electricity: number | null; water: number | null }
+    >();
+    for (const lease of endedLeases) {
+        if (!endedByRoom.has(lease.roomId)) {
+            endedByRoom.set(lease.roomId, {
+                electricity: lease.endElectricity,
+                water: lease.endWater,
+            });
+        }
+    }
+
     await db.$transaction(
         input.readings.map((item) => {
             const prev = prevByRoom.get(item.roomId);
+            const ended = endedByRoom.get(item.roomId);
             const electricityOld =
-                item.electricityOld ?? prev?.electricityNew ?? 0;
-            const waterOld = item.waterOld ?? prev?.waterNew ?? 0;
+                item.electricityOld ??
+                prev?.electricityNew ??
+                ended?.electricity ??
+                0;
+            const waterOld =
+                item.waterOld ?? prev?.waterNew ?? ended?.water ?? 0;
 
             if (item.electricityNew < electricityOld) {
                 throw new DomainError(
@@ -313,6 +393,7 @@ function computeLines(args: {
     electricityUsage: number;
     waterUsage: number;
     peopleCount: number;
+    motorcycleCount: number;
     fees: {
         electricityUnitPrice: number;
         waterUnitPrice: number;
@@ -322,7 +403,14 @@ function computeLines(args: {
         elevatorFee: number;
     };
 }): ComputedLine[] {
-    const { baseRent, electricityUsage, waterUsage, peopleCount, fees } = args;
+    const {
+        baseRent,
+        electricityUsage,
+        waterUsage,
+        peopleCount,
+        motorcycleCount,
+        fees,
+    } = args;
 
     const lines: ComputedLine[] = [
         {
@@ -348,10 +436,10 @@ function computeLines(args: {
         },
         {
             feeType: "MOTORCYCLE",
-            description: `Gửi xe máy (${peopleCount} người)`,
-            quantity: peopleCount,
+            description: `Gửi xe máy (${motorcycleCount} xe)`,
+            quantity: motorcycleCount,
             unitPrice: fees.motorcycleUnitPrice,
-            total: peopleCount * fees.motorcycleUnitPrice,
+            total: motorcycleCount * fees.motorcycleUnitPrice,
         },
         {
             feeType: "CLEANING",
@@ -413,6 +501,7 @@ export async function generateInvoices(
                 electricityUsage: reading.electricityNew - reading.electricityOld,
                 waterUsage: reading.waterNew - reading.waterOld,
                 peopleCount: reading.peopleCount,
+                motorcycleCount: reading.motorcycleCount,
                 fees,
             });
             const totalAmount = lines.reduce((sum, l) => sum + l.total, 0);

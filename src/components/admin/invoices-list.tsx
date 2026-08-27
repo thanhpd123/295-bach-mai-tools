@@ -64,6 +64,24 @@ export function InvoicesList() {
         }
     };
 
+    const cancelInvoice = async (invoice: InvoiceDto) => {
+        if (
+            !window.confirm(
+                `Huỷ hoá đơn ${invoice.code}? Hoá đơn sẽ chuyển sang trạng thái "Đã huỷ".`,
+            )
+        )
+            return;
+        try {
+            await apiFetch(`/api/invoices/${invoice.id}`, {
+                method: "PATCH",
+                body: JSON.stringify({ status: "CANCELLED" }),
+            });
+            await load();
+        } catch (err) {
+            setError(err instanceof Error ? err.message : "Huỷ hoá đơn thất bại");
+        }
+    };
+
     const invoices = data?.data ?? [];
     const meta = data?.meta ?? null;
 
@@ -147,6 +165,7 @@ export function InvoicesList() {
                                             setExpanded(expanded === invoice.id ? null : invoice.id)
                                         }
                                         onMarkPaid={() => markPaid(invoice)}
+                                        onCancel={() => cancelInvoice(invoice)}
                                     />
                                 ))}
                             </tbody>
@@ -190,11 +209,13 @@ function InvoiceRow({
     expanded,
     onToggle,
     onMarkPaid,
+    onCancel,
 }: {
     invoice: InvoiceDto;
     expanded: boolean;
     onToggle: () => void;
     onMarkPaid: () => void;
+    onCancel: () => void;
 }) {
     return (
         <>
@@ -222,9 +243,14 @@ function InvoiceRow({
                 <td className="px-4 py-3 text-slate-500">{formatDate(invoice.dueDate)}</td>
                 <td className="px-4 py-3">
                     {invoice.status !== "PAID" && invoice.status !== "CANCELLED" && (
-                        <Button size="sm" variant="outline" onClick={onMarkPaid}>
-                            Xác nhận đã thu
-                        </Button>
+                        <div className="flex gap-2">
+                            <Button size="sm" variant="outline" onClick={onMarkPaid}>
+                                Xác nhận đã thu
+                            </Button>
+                            <Button size="sm" variant="ghost" onClick={onCancel}>
+                                Huỷ
+                            </Button>
+                        </div>
                     )}
                 </td>
             </tr>
