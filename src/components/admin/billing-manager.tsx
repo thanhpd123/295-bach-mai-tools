@@ -8,7 +8,7 @@ import type { BillingPeriodDto, MeterReadingDto, RoomDto } from "@/types";
 
 type Values = Record<
     string,
-    { electricityNew: string; waterNew: string; people: string; motorcycle: string }
+    { electricityNew: string; waterNew: string; people: string }
 >;
 
 export function BillingManager() {
@@ -61,7 +61,6 @@ export function BillingManager() {
                     electricityNew: String(r.electricityNew),
                     waterNew: String(r.waterNew),
                     people: String(r.peopleCount),
-                    motorcycle: String(r.motorcycleCount),
                 };
             }
             setValues(map);
@@ -101,7 +100,6 @@ export function BillingManager() {
                     electricityNew: Number(values[r.id].electricityNew || 0),
                     waterNew: Number(values[r.id].waterNew || 0),
                     peopleCount: Number(values[r.id].people || 1),
-                    motorcycleCount: Number(values[r.id].motorcycle || 0),
                 }));
             await apiFetch("/api/meter-readings", {
                 method: "POST",
@@ -140,7 +138,7 @@ export function BillingManager() {
     const setValue = (roomId: string, patch: Partial<Values[string]>) => {
         setValues((prev) => ({
             ...prev,
-            [roomId]: { ...(prev[roomId] ?? { electricityNew: "", waterNew: "", people: "1", motorcycle: "0" }), ...patch },
+            [roomId]: { ...(prev[roomId] ?? { electricityNew: "", waterNew: "", people: "1" }), ...patch },
         }));
     };
 
@@ -221,7 +219,6 @@ export function BillingManager() {
                                         <th className="px-4 py-2 font-medium">Nước cũ</th>
                                         <th className="px-4 py-2 font-medium">Nước mới</th>
                                         <th className="px-4 py-2 font-medium">Số người</th>
-                                        <th className="px-4 py-2 font-medium">Số xe</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-100">
@@ -231,7 +228,6 @@ export function BillingManager() {
                                             electricityNew: "",
                                             waterNew: "",
                                             people: "1",
-                                            motorcycle: "0",
                                         };
                                         return (
                                             <tr key={room.id} className="hover:bg-slate-50">
@@ -271,16 +267,6 @@ export function BillingManager() {
                                                         value={v.people}
                                                         onChange={(e) =>
                                                             setValue(room.id, { people: e.target.value })
-                                                        }
-                                                    />
-                                                </td>
-                                                <td className="px-4 py-2">
-                                                    <Input
-                                                        type="number"
-                                                        className="h-8 w-16"
-                                                        value={v.motorcycle}
-                                                        onChange={(e) =>
-                                                            setValue(room.id, { motorcycle: e.target.value })
                                                         }
                                                     />
                                                 </td>

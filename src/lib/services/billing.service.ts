@@ -312,7 +312,7 @@ function computeLines(args: {
     baseRent: number;
     electricityUsage: number;
     waterUsage: number;
-    motorcycleCount: number;
+    peopleCount: number;
     fees: {
         electricityUnitPrice: number;
         waterUnitPrice: number;
@@ -322,7 +322,7 @@ function computeLines(args: {
         elevatorFee: number;
     };
 }): ComputedLine[] {
-    const { baseRent, electricityUsage, waterUsage, motorcycleCount, fees } = args;
+    const { baseRent, electricityUsage, waterUsage, peopleCount, fees } = args;
 
     const lines: ComputedLine[] = [
         {
@@ -348,17 +348,17 @@ function computeLines(args: {
         },
         {
             feeType: "MOTORCYCLE",
-            description: `Gửi xe máy (${motorcycleCount} xe)`,
-            quantity: motorcycleCount,
+            description: `Gửi xe máy (${peopleCount} người)`,
+            quantity: peopleCount,
             unitPrice: fees.motorcycleUnitPrice,
-            total: motorcycleCount * fees.motorcycleUnitPrice,
+            total: peopleCount * fees.motorcycleUnitPrice,
         },
         {
             feeType: "CLEANING",
-            description: "Phí vệ sinh",
-            quantity: 1,
+            description: `Phí vệ sinh (${peopleCount} người)`,
+            quantity: peopleCount,
             unitPrice: fees.cleaningFee,
-            total: fees.cleaningFee,
+            total: peopleCount * fees.cleaningFee,
         },
         {
             feeType: "INTERNET",
@@ -369,10 +369,10 @@ function computeLines(args: {
         },
         {
             feeType: "ELEVATOR",
-            description: "Thang máy",
-            quantity: 1,
+            description: `Thang máy (${peopleCount} người)`,
+            quantity: peopleCount,
             unitPrice: fees.elevatorFee,
-            total: fees.elevatorFee,
+            total: peopleCount * fees.elevatorFee,
         },
     ];
 
@@ -412,7 +412,7 @@ export async function generateInvoices(
                 baseRent: decimalToNumber(room.baseRent),
                 electricityUsage: reading.electricityNew - reading.electricityOld,
                 waterUsage: reading.waterNew - reading.waterOld,
-                motorcycleCount: reading.motorcycleCount,
+                peopleCount: reading.peopleCount,
                 fees,
             });
             const totalAmount = lines.reduce((sum, l) => sum + l.total, 0);

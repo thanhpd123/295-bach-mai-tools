@@ -105,10 +105,10 @@ export function SettingsPanel() {
     const feeFields: Array<{ key: keyof FeeSettings; label: string }> = [
         { key: "electricityUnitPrice", label: "Đơn giá điện (VND/kWh)" },
         { key: "waterUnitPrice", label: "Đơn giá nước (VND/m³)" },
-        { key: "motorcycleUnitPrice", label: "Gửi xe máy (VND/xe)" },
-        { key: "cleaningFee", label: "Phí vệ sinh (VND)" },
+        { key: "motorcycleUnitPrice", label: "Gửi xe máy (VND/người)" },
+        { key: "cleaningFee", label: "Phí vệ sinh (VND/người)" },
         { key: "internetFee", label: "Internet (VND)" },
-        { key: "elevatorFee", label: "Thang máy (VND)" },
+        { key: "elevatorFee", label: "Thang máy (VND/người)" },
         { key: "dueDay", label: "Ngày hạn thanh toán (1-28)" },
     ];
 
