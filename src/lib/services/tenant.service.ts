@@ -51,12 +51,12 @@ export async function listTenants(
     const where = {
         ...(search
             ? {
-                  OR: [
-                      { fullName: { contains: search, mode: "insensitive" as const } },
-                      { phone: { contains: search } },
-                      { user: { username: { contains: search, mode: "insensitive" as const } } },
-                  ],
-              }
+                OR: [
+                    { fullName: { contains: search, mode: "insensitive" as const } },
+                    { phone: { contains: search } },
+                    { user: { username: { contains: search, mode: "insensitive" as const } } },
+                ],
+            }
             : {}),
         ...(query.status
             ? { user: { isActive: query.status === "active" } }
