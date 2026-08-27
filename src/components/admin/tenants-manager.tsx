@@ -28,6 +28,13 @@ export function TenantsManager() {
     });
     // Form chuyển vào phòng
     const [moveIn, setMoveIn] = useState({ tenantId: "", roomId: "", startDate: "" });
+    // Tài khoản vừa tạo (để gửi thông tin đăng nhập cho người thuê)
+    const [created, setCreated] = useState<{
+        fullName: string;
+        username: string;
+        password: string;
+    } | null>(null);
+    const [origin, setOrigin] = useState("");
 
     const load = useCallback(async () => {
         try {
@@ -51,6 +58,11 @@ export function TenantsManager() {
         void load();
     }, [load]);
 
+    useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- giá trị origin chỉ có ở client
+        setOrigin(window.location.origin);
+    }, []);
+
     const showMessage = (text: string) => {
         setMessage(text);
         setTimeout(() => setMessage(null), 4000);
@@ -62,6 +74,11 @@ export function TenantsManager() {
             await apiFetch("/api/tenants", {
                 method: "POST",
                 body: JSON.stringify(form),
+            });
+            setCreated({
+                fullName: form.fullName,
+                username: form.username,
+                password: form.password,
             });
             setForm({ fullName: "", phone: "", idCard: "", username: "", password: "" });
             showMessage("Đã tạo người thuê và tài khoản đăng nhập.");
@@ -169,6 +186,25 @@ export function TenantsManager() {
         }
     };
 
+    const copyInviteMessage = async () => {
+        if (!created) return;
+        const base = origin || window.location.origin;
+        const text = [
+            `Chào ${created.fullName},`,
+            "Nhà trọ đã tạo tài khoản cho bạn:",
+            `• Link đăng nhập: ${base}/app`,
+            `• Tên đăng nhập: ${created.username}`,
+            `• Mật khẩu: ${created.password}`,
+            `• Hướng dẫn sử dụng: ${base}/app/huong-dan`,
+        ].join("\n");
+        try {
+            await navigator.clipboard.writeText(text);
+            showMessage("Đã sao chép tin nhắn mời gửi Zalo.");
+        } catch {
+            showMessage("Không thể sao chép tự động, hãy chép thủ công.");
+        }
+    };
+
     const vacantRooms = rooms.filter((r) => r.status === "VACANT");
 
     return (
@@ -221,6 +257,42 @@ export function TenantsManager() {
                 />
                 <Button type="submit">Tạo người thuê</Button>
             </form>
+
+            {created && (
+                <div className="space-y-3 rounded-xl border border-blue-200 bg-blue-50 p-4">
+                    <div className="flex items-center justify-between gap-2">
+                        <h3 className="font-semibold text-slate-900">
+                            Gửi thông tin đăng nhập cho {created.fullName}
+                        </h3>
+                        <Button size="sm" variant="ghost" onClick={() => setCreated(null)}>
+                            Đóng
+                        </Button>
+                    </div>
+                    <div className="space-y-1 rounded-lg bg-white p-3 text-sm text-slate-700">
+                        <p>
+                            Link đăng nhập:{" "}
+                            <strong className="break-all">
+                                {origin ? `${origin}/app` : "/app"}
+                            </strong>
+                        </p>
+                        <p>
+                            Tên đăng nhập: <strong>{created.username}</strong>
+                        </p>
+                        <p>
+                            Mật khẩu: <strong>{created.password}</strong>
+                        </p>
+                        <p>
+                            Hướng dẫn:{" "}
+                            <strong className="break-all">
+                                {origin ? `${origin}/app/huong-dan` : "/app/huong-dan"}
+                            </strong>
+                        </p>
+                    </div>
+                    <Button variant="outline" onClick={copyInviteMessage}>
+                        Sao chép tin nhắn mời (gửi Zalo/Messenger)
+                    </Button>
+                </div>
+            )}
 
             {/* Chuyển vào phòng */}
             <form

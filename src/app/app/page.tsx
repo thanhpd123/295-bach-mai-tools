@@ -1,19 +1,26 @@
 import Link from "next/link";
+import { cookies } from "next/headers";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { getTenantByUserId } from "@/lib/services/tenant.service";
 import { getTenantHome } from "@/lib/services/dashboard.service";
 import { InvoiceCard } from "@/components/tenant/invoice-card";
-import { formatDate } from "@/lib/utils";
+import { PaymentHero } from "@/components/tenant/payment-hero";
+import { WelcomeScreen } from "@/components/tenant/welcome-screen";
 
 export const dynamic = "force-dynamic";
 
 export default async function TenantHomePage() {
+    const cookieStore = await cookies();
+    if (cookieStore.get("qlpt-onboarded")?.value !== "1") {
+        return <WelcomeScreen />;
+    }
+
     const user = await getCurrentUser();
     const tenant = user ? await getTenantByUserId(user.id) : null;
 
     if (!tenant) {
         return (
-            <div className="rounded-xl border border-slate-200 bg-white p-8 text-center text-slate-500">
+            <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center text-slate-500">
                 Tài khoản của bạn chưa được gắn với phòng nào. Vui lòng liên hệ chủ nhà.
             </div>
         );
@@ -23,19 +30,37 @@ export default async function TenantHomePage() {
 
     return (
         <div className="space-y-4">
+            {/* Thông tin phòng (ngữ cảnh) */}
             <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                 <h1 className="text-xl font-bold text-slate-900">
                     Phòng {home.roomNumber} · Tầng {home.floor}
                 </h1>
-                {home.dueDate && (
+                {home.invoice && (
                     <p className="mt-1 text-sm text-slate-500">
-                        Hạn thanh toán kỳ này:{" "}
-                        <strong className="text-amber-700">{formatDate(home.dueDate)}</strong>
+                        Kỳ thanh toán:{" "}
+                        <strong className="text-slate-700">
+                            {home.invoice.billingPeriodCode}
+                        </strong>
                     </p>
                 )}
             </div>
 
-            {/* Chỉ số công tơ */}
+            {/* Hoá đơn kỳ hiện tại: số tiền nổi bật + nút thanh toán */}
+            {home.invoice ? (
+                <>
+                    <PaymentHero invoice={home.invoice} />
+                    <InvoiceCard
+                        invoice={home.invoice}
+                        bankAccount={home.bankAccount}
+                    />
+                </>
+            ) : (
+                <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-500">
+                    Kỳ này chưa có hoá đơn. Hãy quay lại sau hoặc liên hệ chủ nhà.
+                </div>
+            )}
+
+            {/* Chỉ số công tơ (thông tin phụ, đặt sau cùng) */}
             {home.meterReading && (
                 <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                     <h2 className="mb-3 font-semibold text-slate-900">
@@ -77,14 +102,6 @@ export default async function TenantHomePage() {
                             <strong>{home.meterReading.waterUsage} m³</strong>
                         </div>
                     </div>
-                </div>
-            )}
-
-            {home.invoice ? (
-                <InvoiceCard invoice={home.invoice} bankAccount={home.bankAccount} />
-            ) : (
-                <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-500">
-                    Kỳ này chưa có hoá đơn. Hãy quay lại sau hoặc liên hệ chủ nhà.
                 </div>
             )}
 

@@ -214,3 +214,14 @@ export async function deleteTenant(id: string): Promise<void> {
 export async function getTenantByUserId(userId: string) {
     return db.tenant.findUnique({ where: { userId } });
 }
+
+/** Lấy thông tin người thuê (kèm phòng đang ở) theo userId, dạng DTO. */
+export async function getTenantDtoByUserId(
+    userId: string,
+): Promise<TenantDto | null> {
+    const tenant = await db.tenant.findUnique({
+        where: { userId },
+        include: tenantInclude,
+    });
+    return tenant ? serializeTenant(tenant as unknown as RawTenant) : null;
+}

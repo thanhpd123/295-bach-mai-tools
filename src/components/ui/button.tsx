@@ -2,7 +2,7 @@ import { cn } from "@/lib/utils";
 import { forwardRef, type ButtonHTMLAttributes } from "react";
 
 type Variant = "primary" | "secondary" | "outline" | "ghost" | "destructive";
-type Size = "sm" | "md" | "lg";
+type Size = "sm" | "md" | "lg" | "xl";
 
 const variantClasses: Record<Variant, string> = {
     primary: "bg-blue-600 text-white shadow-sm hover:bg-blue-700",
@@ -16,6 +16,7 @@ const sizeClasses: Record<Size, string> = {
     sm: "h-8 px-3 text-sm",
     md: "h-10 px-4 text-sm",
     lg: "h-11 px-6 text-base",
+    xl: "h-12 w-full px-6 text-base",
 };
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -28,7 +29,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         <button
             ref={ref}
             className={cn(
-                "inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:pointer-events-none disabled:opacity-50",
+                "inline-flex touch-manipulation items-center justify-center gap-2 rounded-lg font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:pointer-events-none disabled:opacity-50",
                 variantClasses[variant],
                 sizeClasses[size],
                 className,
