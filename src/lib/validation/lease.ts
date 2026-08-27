@@ -17,6 +17,8 @@ export const createLeaseSchema = z.object({
 /** Kết thúc hợp đồng (chuyển đi) */
 export const endLeaseSchema = z.object({
     endDate: z.coerce.date(),
+    finalElectricity: z.coerce.number().int().nonnegative().optional(),
+    finalWater: z.coerce.number().int().nonnegative().optional(),
 });
 
 export const leaseQuerySchema = z.object({

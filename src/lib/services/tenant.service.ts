@@ -24,7 +24,7 @@ type RawTenant = {
     note: string | null;
     createdAt: Date;
     user: { username: string; isActive: boolean };
-    leases: Array<{ room: { number: string } }>;
+    leases: Array<{ id: string; room: { number: string } }>;
 };
 
 function serializeTenant(tenant: RawTenant): TenantDto {
@@ -38,6 +38,7 @@ function serializeTenant(tenant: RawTenant): TenantDto {
         username: tenant.user.username,
         isActive: tenant.user.isActive,
         activeRoom: tenant.leases[0]?.room.number ?? null,
+        activeLeaseId: tenant.leases[0]?.id ?? null,
         createdAt:
             serializeDate(tenant.createdAt) ?? tenant.createdAt.toISOString(),
     };
@@ -100,6 +101,23 @@ export async function getTenantById(id: string): Promise<TenantDto | null> {
 export async function createTenant(
     input: CreateTenantInput,
 ): Promise<TenantDto> {
+    const username = input.username.trim();
+
+    // Username chỉ cần duy nhất trong số tài khoản ĐANG hoạt động
+    // (tài khoản đã khoá — người đã chuyển đi — có thể dùng lại username cũ).
+    const conflict = await db.user.findFirst({
+        where: {
+            username: { equals: username, mode: "insensitive" },
+            isActive: true,
+        },
+    });
+    if (conflict) {
+        throw new DomainError(
+            409,
+            "Tên đăng nhập đã được sử dụng bởi tài khoản đang hoạt động.",
+        );
+    }
+
     const passwordHash = await hashPassword(input.password);
 
     const tenant = await db.tenant.create({
@@ -110,7 +128,7 @@ export async function createTenant(
             note: input.note ?? null,
             user: {
                 create: {
-                    username: input.username,
+                    username,
                     passwordHash,
                     name: input.fullName,
                     role: "TENANT",

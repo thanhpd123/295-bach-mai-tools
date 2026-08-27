@@ -23,6 +23,8 @@ type RawLease = {
     peopleCount: number;
     motorcycleCount: number;
     deposit: unknown;
+    endElectricity: number | null;
+    endWater: number | null;
     room: { number: string };
     tenant: { fullName: string };
 };
@@ -41,6 +43,8 @@ function serializeLease(lease: RawLease): LeaseDto {
         peopleCount: lease.peopleCount,
         motorcycleCount: lease.motorcycleCount,
         deposit: decimalToNumber(lease.deposit),
+        endElectricity: lease.endElectricity,
+        endWater: lease.endWater,
     };
 }
 
@@ -122,7 +126,16 @@ export async function endLease(
 
         const updated = await tx.lease.update({
             where: { id },
-            data: { status: "ENDED", endDate: input.endDate },
+            data: {
+                status: "ENDED",
+                endDate: input.endDate,
+                ...(input.finalElectricity !== undefined && {
+                    endElectricity: input.finalElectricity,
+                }),
+                ...(input.finalWater !== undefined && {
+                    endWater: input.finalWater,
+                }),
+            },
             include: leaseInclude,
         });
 

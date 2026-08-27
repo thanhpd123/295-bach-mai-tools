@@ -136,6 +136,39 @@ export function TenantsManager() {
         }
     };
 
+    const endLease = async (tenant: TenantDto) => {
+        if (!tenant.activeLeaseId) return;
+        const endDate = window.prompt(
+            `Ngày chuyển đi của ${tenant.fullName} (YYYY-MM-DD):`,
+            new Date().toISOString().slice(0, 10),
+        );
+        if (!endDate) return;
+        const finalElectricity = window.prompt(
+            "Chỉ số điện cuối (bỏ trống nếu không ghi):",
+        );
+        const finalWater = window.prompt(
+            "Chỉ số nước cuối (bỏ trống nếu không ghi):",
+        );
+        try {
+            await apiFetch(`/api/leases/${tenant.activeLeaseId}/end`, {
+                method: "POST",
+                body: JSON.stringify({
+                    endDate: new Date(endDate).toISOString(),
+                    ...(finalElectricity !== null && finalElectricity !== ""
+                        ? { finalElectricity: Number(finalElectricity) }
+                        : {}),
+                    ...(finalWater !== null && finalWater !== ""
+                        ? { finalWater: Number(finalWater) }
+                        : {}),
+                }),
+            });
+            showMessage(`Đã kết thúc hợp đồng của ${tenant.fullName}.`);
+            await load();
+        } catch (err) {
+            setError(err instanceof Error ? err.message : "Kết thúc thất bại");
+        }
+    };
+
     const vacantRooms = rooms.filter((r) => r.status === "VACANT");
 
     return (
@@ -309,6 +342,15 @@ export function TenantsManager() {
                                                 >
                                                     {tenant.isActive ? "Khoá" : "Kích hoạt"}
                                                 </Button>
+                                                {tenant.activeLeaseId && (
+                                                    <Button
+                                                        size="sm"
+                                                        variant="outline"
+                                                        onClick={() => endLease(tenant)}
+                                                    >
+                                                        Chuyển đi
+                                                    </Button>
+                                                )}
                                                 <Button
                                                     size="sm"
                                                     variant="destructive"

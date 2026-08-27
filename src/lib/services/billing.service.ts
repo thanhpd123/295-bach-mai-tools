@@ -48,6 +48,7 @@ type RawInvoice = {
     room: { number: string };
     billingPeriod: { code: string };
     tenant: { fullName: string } | null;
+    tenantName: string | null;
     items: Array<{
         id: string;
         feeType: FeeType;
@@ -67,7 +68,7 @@ function serializeInvoice(invoice: RawInvoice): InvoiceDto {
         billingPeriodId: invoice.billingPeriodId,
         billingPeriodCode: invoice.billingPeriod.code,
         tenantId: invoice.tenantId,
-        tenantName: invoice.tenant?.fullName ?? null,
+        tenantName: invoice.tenantName ?? invoice.tenant?.fullName ?? null,
         status: invoice.status,
         dueDate: serializeDate(invoice.dueDate) ?? invoice.dueDate.toISOString(),
         totalAmount: decimalToNumber(invoice.totalAmount),
@@ -419,6 +420,7 @@ export async function generateInvoices(
 
             const lease = await tx.lease.findFirst({
                 where: { roomId: room.id, status: "ACTIVE" },
+                include: { tenant: { select: { fullName: true } } },
             });
 
             // Xoá hoá đơn cũ chưa thanh toán của phòng+kỳ để tạo lại (regenerate).
@@ -436,6 +438,7 @@ export async function generateInvoices(
                     roomId: room.id,
                     billingPeriodId: period.id,
                     tenantId: lease?.tenantId ?? null,
+                    tenantName: lease?.tenant.fullName ?? null,
                     status: "PENDING",
                     dueDate: period.dueDate,
                     totalAmount,
@@ -483,6 +486,9 @@ export async function listInvoices(
                         tenant: {
                             fullName: { contains: search, mode: "insensitive" as const },
                         },
+                    },
+                    {
+                        tenantName: { contains: search, mode: "insensitive" as const },
                     },
                 ],
             }

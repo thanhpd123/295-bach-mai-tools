@@ -37,7 +37,7 @@ async function main() {
 
     const passwordHash = await bcrypt.hash(password, 12);
 
-    const existing = await prisma.user.findUnique({
+    const existing = await prisma.user.findFirst({
         where: { username },
     });
 

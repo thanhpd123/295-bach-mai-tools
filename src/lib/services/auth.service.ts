@@ -19,7 +19,7 @@ export async function login(
     clientInfo: { ip: string | null; userAgent: string | null },
 ): Promise<LoginResult> {
     const account = input.account.trim();
-    const user = await db.user.findFirst({
+    const candidates = await db.user.findMany({
         where: {
             OR: [
                 { username: { equals: account, mode: "insensitive" } },
@@ -27,6 +27,8 @@ export async function login(
             ],
         },
     });
+    // Ưu tiên tài khoản đang hoạt động — người cũ đã rời đi có thể trùng SĐT/username.
+    const user = candidates.find((u) => u.isActive) ?? candidates[0] ?? null;
 
     const locked =
         user !== null &&

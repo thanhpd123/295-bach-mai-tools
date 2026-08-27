@@ -45,6 +45,7 @@ export interface TenantDto {
     username: string;
     isActive: boolean;
     activeRoom: string | null;
+    activeLeaseId: string | null;
     createdAt: string;
 }
 
@@ -75,6 +76,8 @@ export interface LeaseDto {
     peopleCount: number;
     motorcycleCount: number;
     deposit: number;
+    endElectricity: number | null;
+    endWater: number | null;
 }
 
 // ----- Billing -----

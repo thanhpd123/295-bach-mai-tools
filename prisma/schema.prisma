@@ -83,7 +83,7 @@ enum TransferSource {
 /// Tài khoản đăng nhập
 model User {
   id                  String     @id @default(cuid())
-  username            String     @unique /// Tên đăng nhập (hoặc SĐT) dùng để đăng nhập
+  username            String /// Tên đăng nhập (hoặc SĐT) dùng để đăng nhập
   passwordHash        String
   name                String
   role                UserRole   @default(TENANT)
@@ -97,6 +97,7 @@ model User {
   updatedAt           DateTime   @updatedAt
 
   @@index([role])
+  @@index([username])
 }
 
 /// Hồ sơ người thuê (gắn 1-1 với tài khoản)
@@ -147,6 +148,8 @@ model Lease {
   peopleCount     Int         @default(1) /// Số người ở
   motorcycleCount Int         @default(0) /// Số xe máy
   deposit         Decimal     @default(0) @db.Decimal(15, 0) /// Tiền cọc (VND)
+  endElectricity  Int? /// Chỉ số điện cuối tại ngày chuyển đi
+  endWater        Int? /// Chỉ số nước cuối tại ngày chuyển đi
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
 
@@ -203,6 +206,7 @@ model Invoice {
   billingPeriodId String
   tenant          Tenant?         @relation(fields: [tenantId], references: [id], onDelete: SetNull)
   tenantId        String?
+  tenantName      String? /// Tên người thuê tại thời điểm tạo hoá đơn (snapshot, giữ lịch sử)
   status          InvoiceStatus   @default(DRAFT)
   dueDate         DateTime
   totalAmount     Decimal         @db.Decimal(15, 0)
