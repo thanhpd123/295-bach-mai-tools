@@ -9,6 +9,7 @@ import type {
     MarkPaidInput,
     TransferQuery,
     UpdateInvoiceInput,
+    UpdateInvoiceItemsInput,
     UpsertMeterReadingsInput,
 } from "@/lib/validation/billing";
 import type {
@@ -673,6 +674,70 @@ export async function markInvoicePaid(
                 status: "MATCHED",
                 source: "MANUAL",
                 note: input.note ?? `Xác nhận thủ công (${input.method})`,
+            },
+        });
+    });
+
+    const updated = await db.invoice.findUnique({
+        where: { id },
+        include: invoiceInclude,
+    });
+    return serializeInvoice(updated as unknown as RawInvoice);
+}
+
+/**
+ * Sửa từng dòng khoản phí của hoá đơn chưa thanh toán (ví dụ: miễn thang máy
+ * khi sinh viên nghỉ hè) rồi tính lại tổng hoá đơn.
+ */
+export async function updateInvoiceItems(
+    id: string,
+    input: UpdateInvoiceItemsInput,
+): Promise<InvoiceDto> {
+    const invoice = await db.invoice.findUnique({
+        where: { id },
+        include: { items: true },
+    });
+    if (!invoice) throw new DomainError(404, "Không tìm thấy hoá đơn");
+    if (invoice.status !== "DRAFT" && invoice.status !== "PENDING") {
+        throw new DomainError(409, "Chỉ sửa được hoá đơn chưa thanh toán");
+    }
+
+    const itemById = new Map(invoice.items.map((item) => [item.id, item]));
+    for (const patch of input.items) {
+        if (!itemById.has(patch.id)) {
+            throw new DomainError(422, "Dòng khoản phí không thuộc hoá đơn này");
+        }
+    }
+
+    await db.$transaction(async (tx) => {
+        for (const patch of input.items) {
+            const item = itemById.get(patch.id)!;
+            const quantity = patch.quantity ?? item.quantity;
+            const unitPrice =
+                patch.unitPrice ?? decimalToNumber(item.unitPrice);
+            await tx.invoiceItem.update({
+                where: { id: patch.id },
+                data: {
+                    quantity,
+                    unitPrice,
+                    total: quantity * unitPrice,
+                },
+            });
+        }
+
+        const items = await tx.invoiceItem.findMany({
+            where: { invoiceId: id },
+        });
+        const totalAmount = items.reduce(
+            (sum, item) => sum + decimalToNumber(item.total),
+            0,
+        );
+
+        await tx.invoice.update({
+            where: { id },
+            data: {
+                totalAmount,
+                ...(input.note !== undefined && { note: input.note }),
             },
         });
     });

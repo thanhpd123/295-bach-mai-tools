@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { apiFetch } from "@/lib/api-client";
 import { invoiceStatusLabels } from "@/lib/labels";
 import { formatCurrency, formatDate } from "@/lib/utils";
-import type { InvoiceDto, Paginated } from "@/types";
+import type { InvoiceDto, InvoiceItemDto, Paginated } from "@/types";
 import type { InvoiceStatus } from "@/generated/prisma/enums";
 
 const statusVariant: Record<InvoiceStatus, "success" | "warning" | "danger" | "neutral"> = {
@@ -79,6 +79,29 @@ export function InvoicesList() {
             await load();
         } catch (err) {
             setError(err instanceof Error ? err.message : "Huỷ hoá đơn thất bại");
+        }
+    };
+
+    const saveItems = async (
+        invoiceId: string,
+        payload: {
+            note?: string;
+            items: { id: string; quantity: number; unitPrice: number }[];
+        },
+    ) => {
+        try {
+            const updated = await apiFetch<InvoiceDto>(
+                `/api/invoices/${invoiceId}/items`,
+                {
+                    method: "PATCH",
+                    body: JSON.stringify(payload),
+                },
+            );
+            await load();
+            return updated;
+        } catch (err) {
+            setError(err instanceof Error ? err.message : "Lưu chỉnh sửa thất bại");
+            return null;
         }
     };
 
@@ -166,6 +189,7 @@ export function InvoicesList() {
                                         }
                                         onMarkPaid={() => markPaid(invoice)}
                                         onCancel={() => cancelInvoice(invoice)}
+                                        onSaveItems={saveItems}
                                     />
                                 ))}
                             </tbody>
@@ -204,19 +228,96 @@ export function InvoicesList() {
     );
 }
 
+function buildEdits(
+    items: InvoiceItemDto[],
+): Record<string, { quantity: string; unitPrice: string }> {
+    const edits: Record<string, { quantity: string; unitPrice: string }> = {};
+    for (const item of items) {
+        edits[item.id] = {
+            quantity: String(item.quantity),
+            unitPrice: String(item.unitPrice),
+        };
+    }
+    return edits;
+}
+
 function InvoiceRow({
     invoice,
     expanded,
     onToggle,
     onMarkPaid,
     onCancel,
+    onSaveItems,
 }: {
     invoice: InvoiceDto;
     expanded: boolean;
     onToggle: () => void;
     onMarkPaid: () => void;
     onCancel: () => void;
+    onSaveItems: (
+        invoiceId: string,
+        payload: {
+            note?: string;
+            items: { id: string; quantity: number; unitPrice: number }[];
+        },
+    ) => Promise<InvoiceDto | null>;
 }) {
+    const [edits, setEdits] = useState<
+        Record<string, { quantity: string; unitPrice: string }>
+    >(() => buildEdits(invoice.items));
+    const [note, setNote] = useState(invoice.note ?? "");
+    const [saving, setSaving] = useState(false);
+    const [saveError, setSaveError] = useState<string | null>(null);
+
+    const editable = invoice.status === "DRAFT" || invoice.status === "PENDING";
+
+    const setEdit = (
+        itemId: string,
+        field: "quantity" | "unitPrice",
+        value: string,
+    ) => {
+        setEdits((prev) => ({
+            ...prev,
+            [itemId]: { ...prev[itemId], [field]: value },
+        }));
+    };
+
+    const previewTotal = invoice.items.reduce((sum, item) => {
+        const e = edits[item.id];
+        if (!e) return sum + item.total;
+        return sum + Number(e.quantity || 0) * Number(e.unitPrice || 0);
+    }, 0);
+
+    const save = async () => {
+        setSaving(true);
+        setSaveError(null);
+        try {
+            const items = invoice.items.map((item) => {
+                const e = edits[item.id] ?? {
+                    quantity: String(item.quantity),
+                    unitPrice: String(item.unitPrice),
+                };
+                return {
+                    id: item.id,
+                    quantity: Number(e.quantity || 0),
+                    unitPrice: Number(e.unitPrice || 0),
+                };
+            });
+            const updated = await onSaveItems(invoice.id, {
+                note: note.trim() || undefined,
+                items,
+            });
+            if (updated) {
+                setEdits(buildEdits(updated.items));
+                setNote(updated.note ?? "");
+            }
+        } catch (err) {
+            setSaveError(err instanceof Error ? err.message : "Lưu chỉnh sửa thất bại");
+        } finally {
+            setSaving(false);
+        }
+    };
+
     return (
         <>
             <tr className="hover:bg-slate-50">
@@ -260,19 +361,79 @@ function InvoiceRow({
                         <div className="text-xs text-slate-600">
                             <div className="mb-1 font-medium">Chi tiết khoản phí:</div>
                             <ul className="space-y-1">
-                                {invoice.items.map((item) => (
-                                    <li key={item.id} className="flex justify-between gap-4">
-                                        <span>
-                                            {item.description} × {item.quantity}
-                                        </span>
-                                        <span className="tabular-nums">
-                                            {formatCurrency(item.total)}
-                                        </span>
-                                    </li>
-                                ))}
+                                {invoice.items.map((item) => {
+                                    const e = edits[item.id] ?? {
+                                        quantity: String(item.quantity),
+                                        unitPrice: String(item.unitPrice),
+                                    };
+                                    const qty = Number(e.quantity || 0);
+                                    const price = Number(e.unitPrice || 0);
+                                    return (
+                                        <li
+                                            key={item.id}
+                                            className="flex items-center justify-between gap-4"
+                                        >
+                                            <span className="min-w-40">{item.description}</span>
+                                            {editable ? (
+                                                <span className="flex items-center gap-2">
+                                                    <input
+                                                        type="number"
+                                                        min={0}
+                                                        step={1}
+                                                        value={e.quantity}
+                                                        onChange={(ev) =>
+                                                            setEdit(item.id, "quantity", ev.target.value)
+                                                        }
+                                                        className="h-7 w-16 rounded border border-slate-300 px-1 text-right"
+                                                    />
+                                                    <span>×</span>
+                                                    <input
+                                                        type="number"
+                                                        min={0}
+                                                        step={1}
+                                                        value={e.unitPrice}
+                                                        onChange={(ev) =>
+                                                            setEdit(item.id, "unitPrice", ev.target.value)
+                                                        }
+                                                        className="h-7 w-24 rounded border border-slate-300 px-1 text-right"
+                                                    />
+                                                    <span className="text-slate-400">đ</span>
+                                                </span>
+                                            ) : (
+                                                <span>× {item.quantity}</span>
+                                            )}
+                                            <span className="tabular-nums">
+                                                {editable
+                                                    ? formatCurrency(qty * price)
+                                                    : formatCurrency(item.total)}
+                                            </span>
+                                        </li>
+                                    );
+                                })}
                             </ul>
+                            {editable && (
+                                <div className="mt-3 space-y-2">
+                                    <input
+                                        value={note}
+                                        onChange={(ev) => setNote(ev.target.value)}
+                                        placeholder="Ghi chú (vd: Nghỉ hè – miễn thang máy)"
+                                        className="h-8 w-full rounded border border-slate-300 px-2"
+                                    />
+                                    <div className="flex items-center gap-2">
+                                        <Button size="sm" onClick={save} disabled={saving}>
+                                            {saving ? "Đang lưu..." : "Lưu chỉnh sửa"}
+                                        </Button>
+                                        {saveError && (
+                                            <span className="text-red-600">{saveError}</span>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
                             <div className="mt-2 border-t border-slate-200 pt-1 font-semibold">
-                                Tổng: {formatCurrency(invoice.totalAmount)}
+                                Tổng:{" "}
+                                {formatCurrency(
+                                    editable ? previewTotal : invoice.totalAmount,
+                                )}
                                 {invoice.paidAt && (
                                     <span className="ml-2 font-normal text-emerald-600">
                                         · đã thu {formatDate(invoice.paidAt)}

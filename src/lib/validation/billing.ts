@@ -41,6 +41,20 @@ export const markPaidSchema = z.object({
     note: z.string().trim().max(500).optional(),
 });
 
+/** Sửa từng dòng khoản phí của hoá đơn chưa thanh toán */
+export const invoiceItemUpdateSchema = z.object({
+    id: z.string().min(1, "Thiếu dòng khoản phí"),
+    quantity: z.coerce.number().int().min(0).optional(),
+    unitPrice: z.coerce.number().int().min(0).optional(),
+});
+
+export const updateInvoiceItemsSchema = z.object({
+    note: z.string().trim().max(500).optional(),
+    items: z
+        .array(invoiceItemUpdateSchema)
+        .min(1, "Cần ít nhất 1 dòng khoản phí"),
+});
+
 /** Query danh sách hoá đơn */
 export const invoiceQuerySchema = z.object({
     page: z.coerce.number().int().positive().default(1),
@@ -88,6 +102,7 @@ export type UpsertMeterReadingsInput = z.infer<
 >;
 export type GenerateInvoicesInput = z.infer<typeof generateInvoicesSchema>;
 export type UpdateInvoiceInput = z.infer<typeof updateInvoiceSchema>;
+export type UpdateInvoiceItemsInput = z.infer<typeof updateInvoiceItemsSchema>;
 export type MarkPaidInput = z.infer<typeof markPaidSchema>;
 export type InvoiceQuery = z.infer<typeof invoiceQuerySchema>;
 export type TransferQuery = z.infer<typeof transferQuerySchema>;
