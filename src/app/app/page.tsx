@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
 
 export default async function TenantHomePage() {
     const cookieStore = await cookies();
-    if (cookieStore.get("qlpt-onboarded")?.value !== "1") {
+    if (cookieStore.get("chu-tro-onboarded")?.value !== "1") {
         return <WelcomeScreen />;
     }
 

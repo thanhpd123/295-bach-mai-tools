@@ -3,6 +3,7 @@ import { getCurrentUser } from "@/lib/auth/current-user";
 import { getTenantDtoByUserId } from "@/lib/services/tenant.service";
 import { LogoutButton } from "@/components/auth/logout-button";
 import { BottomNav } from "@/components/tenant/bottom-nav";
+import { LogoMark } from "@/components/ui/logo-mark";
 import { siteConfig } from "@/config/site";
 
 /** Layout cho cổng người thuê (mobile-first). */
@@ -19,8 +20,8 @@ export default async function TenantLayout({
             <header className="sticky top-0 z-30 border-b border-slate-200 bg-white">
                 <div className="mx-auto flex h-14 max-w-3xl items-center justify-between gap-3 px-4">
                     <Link href="/app" className="flex min-w-0 items-center gap-2">
-                        <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-blue-600 text-xs font-bold text-white">
-                            {siteConfig.shortName}
+                        <div className="flex size-8 shrink-0 items-center justify-center">
+                            <LogoMark className="size-8" />
                         </div>
                         <span className="truncate font-semibold">{siteConfig.name}</span>
                     </Link>

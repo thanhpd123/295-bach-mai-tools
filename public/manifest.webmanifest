@@ -1,13 +1,13 @@
 {
-    "name": "Quản lý phòng trọ",
-    "short_name": "QLPT",
-    "description": "Hệ thống quản lý phòng trọ và thu tiền điện nước hàng tháng",
+    "name": "Chủ Trọ",
+    "short_name": "Chủ Trọ",
+    "description": "Chủ Trọ — quản lý phòng trọ và thu tiền điện nước hàng tháng",
     "lang": "vi",
     "start_url": "/app",
     "scope": "/",
     "display": "standalone",
     "background_color": "#f8fafc",
-    "theme_color": "#2563eb",
+    "theme_color": "#0F766E",
     "icons": [
         {
             "src": "/app-icon-192.png",

@@ -1,6 +1,6 @@
-# 295 Bạch Mai Tools — Hệ thống quản lý thanh toán
+# Chủ Trọ — Ứng dụng quản lý phòng trọ & thu tiền
 
-Ứng dụng **full-stack Next.js** (viết cả front-end lẫn back-end trong cùng một repo) dùng để quản lý thanh toán cho phòng khám 295 Bạch Mai. Sẵn sàng deploy lên **Vercel**.
+Ứng dụng **full-stack Next.js** (viết cả front-end lẫn back-end trong cùng một repo) dùng để quản lý phòng trọ: phòng, người thuê, hoá đơn và thu tiền điện nước hàng tháng. Sẵn sàng deploy lên **Vercel**.
 
 > 📖 Muốn hiểu sâu kiến trúc, đọc thêm [`ARCHITECTURE.md`](./ARCHITECTURE.md).
 

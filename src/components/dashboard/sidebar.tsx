@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { navItems, siteConfig } from "@/config/site";
 import { cn } from "@/lib/utils";
+import { LogoMark } from "@/components/ui/logo-mark";
 
 /** Map icon theo từng mục menu */
 const iconByHref: Record<string, LucideIcon> = {
@@ -35,8 +36,8 @@ export function Sidebar() {
         <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r border-slate-200 bg-white lg:flex">
             {/* Logo */}
             <div className="flex h-16 items-center gap-2.5 border-b border-slate-200 px-5">
-                <div className="flex size-9 items-center justify-center rounded-lg bg-blue-600 text-xs font-bold text-white">
-                    {siteConfig.shortName}
+                <div className="flex size-9 items-center justify-center">
+                    <LogoMark className="size-9" />
                 </div>
                 <div>
                     <div className="text-sm font-semibold leading-tight">

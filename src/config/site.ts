@@ -4,10 +4,10 @@
  */
 
 export const siteConfig = {
-    name: "Quản lý phòng trọ",
-    shortName: "QLPT",
+    name: "Chủ Trọ",
+    shortName: "Chủ Trọ",
     description:
-        "Hệ thống quản lý phòng trọ và thu tiền điện nước hàng tháng",
+        "Chủ Trọ — quản lý phòng trọ và thu tiền điện nước hàng tháng",
     url: process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000",
 } as const;
 

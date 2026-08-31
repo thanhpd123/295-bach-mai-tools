@@ -2,8 +2,9 @@
 
 import { useRouter } from "next/navigation";
 import { CheckCircle2, LogIn, QrCode, Smartphone } from "lucide-react";
+import { LogoMark } from "@/components/ui/logo-mark";
 
-const COOKIE = "qlpt-onboarded";
+const COOKIE = "chu-tro-onboarded";
 
 const steps = [
     {
@@ -36,8 +37,8 @@ export function WelcomeScreen() {
         <div className="flex min-h-[70vh] flex-col justify-center">
             <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
                 <div className="text-center">
-                    <div className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-blue-600 text-xl font-bold text-white">
-                        QLPT
+                    <div className="mx-auto flex size-14 items-center justify-center">
+                        <LogoMark className="size-14" />
                     </div>
                     <h1 className="mt-4 text-xl font-bold text-slate-900">
                         Chào mừng bạn!
