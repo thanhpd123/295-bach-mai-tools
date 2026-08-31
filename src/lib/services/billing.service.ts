@@ -559,6 +559,8 @@ export async function listInvoices(
 ): Promise<Paginated<InvoiceDto>> {
     const { page, limit, search, status, billingPeriodId, roomId } = query;
 
+    await syncOverdueInvoices();
+
     const where = {
         ...(status ? { status } : {}),
         ...(billingPeriodId ? { billingPeriodId } : {}),
@@ -618,9 +620,24 @@ export async function getInvoiceByCode(code: string): Promise<InvoiceDto | null>
     return invoice ? serializeInvoice(invoice as unknown as RawInvoice) : null;
 }
 
+/**
+ * Cập nhật các hoá đơn PENDING đã quá hạn thanh toán thành OVERDUE.
+ * Chạy ngầm trên các đường đọc (dashboard, danh sách hoá đơn, trang người thuê)
+ * để trạng thái quá hạn luôn được phản ánh kịp thời mà không cần cron.
+ */
+export async function syncOverdueInvoices(): Promise<number> {
+    const result = await db.invoice.updateMany({
+        where: { status: "PENDING", dueDate: { lt: new Date() } },
+        data: { status: "OVERDUE" },
+    });
+    return result.count;
+}
+
 export async function listInvoicesByTenant(
     tenantId: string,
 ): Promise<InvoiceDto[]> {
+    await syncOverdueInvoices();
+
     const invoices = await db.invoice.findMany({
         where: { tenantId },
         include: invoiceInclude,
@@ -783,9 +800,28 @@ export async function reconcileTransfer(
         let status: "MATCHED" | "UNMATCHED" | "DUPLICATE" | "REVIEW" = "UNMATCHED";
         let invoiceId: string | null = null;
 
-        const content = transfer.content?.trim();
+        const content = transfer.content?.trim() ?? "";
+        // Ưu tiên tìm mã hoá đơn (dạng HD-YYMM-XXXX) NẰM TRONG nội dung CK,
+        // rồi fallback khớp chính xác toàn bộ nội dung (tương thích cũ).
+        const codeMatch = content.match(/HD-\d{2}\d{2}-[A-Za-z0-9]+/i)?.[0];
         const invoice = content
-            ? await tx.invoice.findUnique({ where: { code: content } })
+            ? await tx.invoice.findFirst({
+                where: {
+                    OR: [
+                        { code: { equals: content, mode: "insensitive" } },
+                        ...(codeMatch
+                            ? [
+                                {
+                                    code: {
+                                        equals: codeMatch,
+                                        mode: "insensitive" as const,
+                                    },
+                                },
+                            ]
+                            : []),
+                    ],
+                },
+            })
             : null;
 
         if (invoice) {

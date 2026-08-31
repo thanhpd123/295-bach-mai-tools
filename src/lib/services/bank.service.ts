@@ -37,28 +37,32 @@ export async function getActiveBankAccount(): Promise<BankAccountDto | null> {
 export async function createBankAccount(
     input: BankAccountInput,
 ): Promise<BankAccountDto> {
-    // Chỉ cho phép một tài khoản active.
-    if (input.isActive) {
-        await db.bankAccount.updateMany({
-            data: { isActive: false },
-        });
-    }
-    const account = await db.bankAccount.create({ data: input });
-    return serializeAccount(account);
+    return db.$transaction(async (tx) => {
+        // Chỉ cho phép một tài khoản active.
+        if (input.isActive) {
+            await tx.bankAccount.updateMany({
+                data: { isActive: false },
+            });
+        }
+        const account = await tx.bankAccount.create({ data: input });
+        return serializeAccount(account);
+    });
 }
 
 export async function updateBankAccount(
     id: string,
     input: Partial<BankAccountInput>,
 ): Promise<BankAccountDto> {
-    if (input.isActive) {
-        await db.bankAccount.updateMany({ data: { isActive: false } });
-    }
-    const account = await db.bankAccount.update({
-        where: { id },
-        data: input,
+    return db.$transaction(async (tx) => {
+        if (input.isActive) {
+            await tx.bankAccount.updateMany({ data: { isActive: false } });
+        }
+        const account = await tx.bankAccount.update({
+            where: { id },
+            data: input,
+        });
+        return serializeAccount(account);
     });
-    return serializeAccount(account);
 }
 
 export async function deleteBankAccount(id: string): Promise<void> {

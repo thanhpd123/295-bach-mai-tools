@@ -40,6 +40,8 @@ export function SettingsPanel() {
     const [accountForm, setAccountForm] = useState(emptyAccount);
     const [message, setMessage] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
+    const [accountBusy, setAccountBusy] = useState(false);
+    const [feeBusy, setFeeBusy] = useState(false);
 
     const load = useCallback(async () => {
         try {
@@ -61,6 +63,9 @@ export function SettingsPanel() {
 
     const addAccount = async (e: React.FormEvent) => {
         e.preventDefault();
+        setMessage(null);
+        setError(null);
+        setAccountBusy(true);
         try {
             await apiFetch("/api/bank-accounts", {
                 method: "POST",
@@ -71,25 +76,44 @@ export function SettingsPanel() {
             await load();
         } catch (err) {
             setError(err instanceof Error ? err.message : "Thêm thất bại");
+        } finally {
+            setAccountBusy(false);
         }
     };
 
     const setActive = async (id: string) => {
-        await apiFetch(`/api/bank-accounts/${id}`, {
-            method: "PATCH",
-            body: JSON.stringify({ isActive: true }),
-        });
+        setMessage(null);
+        setError(null);
+        try {
+            await apiFetch(`/api/bank-accounts/${id}`, {
+                method: "PATCH",
+                body: JSON.stringify({ isActive: true }),
+            });
+            setMessage("Đã chuyển tài khoản nhận tiền.");
+        } catch (err) {
+            setError(err instanceof Error ? err.message : "Cập nhật thất bại");
+        }
         await load();
     };
 
     const removeAccount = async (id: string) => {
         if (!window.confirm("Xoá tài khoản ngân hàng này?")) return;
-        await apiFetch(`/api/bank-accounts/${id}`, { method: "DELETE" });
+        setMessage(null);
+        setError(null);
+        try {
+            await apiFetch(`/api/bank-accounts/${id}`, { method: "DELETE" });
+            setMessage("Đã xoá tài khoản ngân hàng.");
+        } catch (err) {
+            setError(err instanceof Error ? err.message : "Xoá thất bại");
+        }
         await load();
     };
 
     const saveFees = async (e: React.FormEvent) => {
         e.preventDefault();
+        setMessage(null);
+        setError(null);
+        setFeeBusy(true);
         try {
             const saved = await apiFetch<FeeSettings>("/api/settings/fees", {
                 method: "PUT",
@@ -99,6 +123,8 @@ export function SettingsPanel() {
             setMessage("Đã lưu đơn giá.");
         } catch (err) {
             setError(err instanceof Error ? err.message : "Lưu thất bại");
+        } finally {
+            setFeeBusy(false);
         }
     };
 
@@ -163,7 +189,9 @@ export function SettingsPanel() {
                             setAccountForm({ ...accountForm, accountName: e.target.value })
                         }
                     />
-                    <Button type="submit">Thêm</Button>
+                    <Button type="submit" disabled={accountBusy}>
+                        {accountBusy ? "Đang thêm..." : "Thêm"}
+                    </Button>
                 </form>
 
                 <div className="mt-4 space-y-2">
@@ -233,8 +261,8 @@ export function SettingsPanel() {
                         </div>
                     ))}
                 </div>
-                <Button type="submit" className="mt-4">
-                    Lưu đơn giá
+                <Button type="submit" className="mt-4" disabled={feeBusy}>
+                    {feeBusy ? "Đang lưu..." : "Lưu đơn giá"}
                 </Button>
             </form>
         </div>

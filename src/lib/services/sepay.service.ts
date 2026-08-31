@@ -17,6 +17,7 @@ interface SepayTransaction {
     transferAmount?: number | string;
     accountNumber?: string;
     transactionDate?: string;
+    transferType?: string; // "in" = tiền vào, "out" = tiền ra
 }
 
 export interface WebhookProcessResult {
@@ -86,10 +87,17 @@ export async function processSepayWebhook(
 
     for (const item of payload as SepayTransaction[]) {
         if (!item.id || item.transferAmount === undefined) continue;
+
+        // Chỉ đối soát giao dịch TIỀN VÀO; bỏ qua rút tiền/chuyển đi ("out").
+        if ((item.transferType ?? "in") !== "in") continue;
+
+        const amount = Number(item.transferAmount);
+        if (!Number.isFinite(amount) || amount <= 0) continue;
+
         try {
             const record = await reconcileTransfer({
                 externalId: String(item.id),
-                amount: Number(item.transferAmount),
+                amount,
                 content: item.content,
                 sourceAccount: item.accountNumber,
                 transferAt: item.transactionDate
@@ -102,6 +110,15 @@ export async function processSepayWebhook(
         } catch {
             results.failed += 1;
         }
+    }
+
+    // Có giao dịch lỗi → báo lỗi để SePay gửi lại cả batch.
+    // Idempotency theo externalId đảm bảo giao dịch đã xử lý không bị lặp.
+    if (results.failed > 0) {
+        throw new DomainError(
+            502,
+            "Một số giao dịch xử lý thất bại, cần gửi lại",
+        );
     }
 
     return results;

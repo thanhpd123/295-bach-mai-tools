@@ -1,7 +1,11 @@
 import { db } from "@/lib/db";
 import { decimalToNumber, serializeDate } from "@/lib/serializers";
 import { getActiveBankAccount } from "@/lib/services/bank.service";
-import { getOpenBillingPeriod, getInvoiceByCode } from "@/lib/services/billing.service";
+import {
+    getOpenBillingPeriod,
+    getInvoiceByCode,
+    syncOverdueInvoices,
+} from "@/lib/services/billing.service";
 import type { DashboardStatsDto, TenantHomeDto } from "@/types";
 
 // ------------------------------------------------------------
@@ -9,6 +13,8 @@ import type { DashboardStatsDto, TenantHomeDto } from "@/types";
 // ------------------------------------------------------------
 
 export async function getDashboardStats(): Promise<DashboardStatsDto> {
+    await syncOverdueInvoices();
+
     const [totalRooms, occupiedRooms, vacantRooms, maintenanceRooms] =
         await Promise.all([
             db.room.count({ where: { isActive: true } }),
@@ -69,6 +75,8 @@ export async function getDashboardStats(): Promise<DashboardStatsDto> {
 
 /** Trang chủ người thuê: phòng, chỉ số, hoá đơn kỳ hiện tại, tài khoản nhận tiền. */
 export async function getTenantHome(tenantId: string): Promise<TenantHomeDto> {
+    await syncOverdueInvoices();
+
     const activeLease = await db.lease.findFirst({
         where: { tenantId, status: "ACTIVE" },
         include: { room: true },
