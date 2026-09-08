@@ -102,8 +102,10 @@ export function Sidebar() {
                     {navItems.map((item) => {
                         const Icon = iconByHref[item.href] ?? LayoutDashboard;
                         const isActive =
-                            pathname === item.href ||
-                            pathname.startsWith(`${item.href}/`);
+                            item.href === "/dashboard"
+                                ? pathname === item.href
+                                : pathname === item.href ||
+                                pathname.startsWith(`${item.href}/`);
 
                         return (
                             <Link

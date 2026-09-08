@@ -23,7 +23,10 @@ export function BottomNav() {
             <div className="mx-auto flex h-16 max-w-3xl">
                 {tabs.map(({ href, label, icon: Icon }) => {
                     const active =
-                        pathname === href || pathname.startsWith(`${href}/`);
+                        href === "/app"
+                            ? pathname === href
+                            : pathname === href ||
+                            pathname.startsWith(`${href}/`);
                     return (
                         <Link
                             key={href}
