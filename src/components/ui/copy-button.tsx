@@ -42,14 +42,14 @@ export function CopyButton({
             type="button"
             onClick={copy}
             className={cn(
-                "flex h-11 w-full items-center justify-between gap-2 rounded-xl border border-slate-300 bg-white px-4 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 active:bg-slate-100",
-                copied && "border-emerald-300 bg-emerald-50 text-emerald-700",
+                "flex h-11 w-full items-center justify-between gap-2 rounded-xl border border-white/15 bg-white/5 px-4 text-sm font-medium text-slate-200 transition-colors hover:bg-white/10",
+                copied && "border-emerald-400/40 bg-emerald-400/10 text-emerald-300",
                 className,
             )}
         >
             <span>{copied ? "Đã sao chép ✓" : label}</span>
             {copied ? (
-                <Check className="size-4 text-emerald-600" />
+                <Check className="size-4 text-emerald-400" />
             ) : (
                 <Copy className="size-4 text-slate-400" />
             )}

@@ -19,7 +19,7 @@ export function BottomNav() {
     const pathname = usePathname();
 
     return (
-        <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white pb-[env(safe-area-inset-bottom)] sm:hidden">
+        <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-white/10 bg-[#080b1b]/80 pb-[env(safe-area-inset-bottom)] backdrop-blur-2xl sm:hidden">
             <div className="mx-auto flex h-16 max-w-3xl">
                 {tabs.map(({ href, label, icon: Icon }) => {
                     const active =
@@ -32,8 +32,8 @@ export function BottomNav() {
                             className={cn(
                                 "flex flex-1 flex-col items-center justify-center gap-1 text-xs font-medium transition-colors",
                                 active
-                                    ? "text-blue-700"
-                                    : "text-slate-500 hover:text-slate-700",
+                                    ? "text-cyan-300"
+                                    : "text-slate-400 hover:text-slate-200",
                             )}
                         >
                             <Icon className="size-5" />

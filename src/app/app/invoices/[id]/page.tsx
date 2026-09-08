@@ -27,7 +27,7 @@ export default async function TenantInvoiceDetailPage({
 
     return (
         <div className="space-y-4">
-            <Link href="/app/invoices" className="text-sm text-blue-600 hover:underline">
+            <Link href="/app/invoices" className="text-sm text-cyan-300 hover:underline">
                 ← Quay lại danh sách
             </Link>
             <InvoiceCard invoice={invoice} bankAccount={bankAccount} />

@@ -45,10 +45,10 @@ export function LoginForm() {
     return (
         <form
             onSubmit={handleSubmit}
-            className="space-y-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
+            className="glass space-y-4 rounded-2xl p-6"
         >
             <div className="space-y-2">
-                <label htmlFor="account" className="text-sm font-medium text-slate-700">
+                <label htmlFor="account" className="text-sm font-medium text-slate-300">
                     Tài khoản
                 </label>
                 <Input
@@ -65,7 +65,7 @@ export function LoginForm() {
             <div className="space-y-2">
                 <label
                     htmlFor="password"
-                    className="text-sm font-medium text-slate-700"
+                    className="text-sm font-medium text-slate-300"
                 >
                     Mật khẩu
                 </label>
@@ -81,7 +81,7 @@ export function LoginForm() {
             </div>
 
             {error && (
-                <div className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+                <div className="rounded-lg bg-rose-500/10 px-3 py-2 text-sm text-rose-300">
                     {error}
                 </div>
             )}
@@ -91,7 +91,7 @@ export function LoginForm() {
                 {loading ? "Đang đăng nhập..." : "Đăng nhập"}
             </Button>
 
-            <p className="text-center text-xs text-slate-400">
+            <p className="text-center text-xs text-slate-500">
                 Chưa có tài khoản? Liên hệ chủ nhà để được tạo tài khoản.
             </p>
         </form>

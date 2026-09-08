@@ -28,22 +28,22 @@ export function PaymentHero({ invoice }: { invoice: InvoiceDto }) {
     const days = overdueDays(invoice.dueDate);
 
     const tone = isPaid
-        ? "border-emerald-200 bg-emerald-50"
+        ? "border-emerald-400/20 bg-emerald-400/10"
         : isOverdue
-            ? "border-red-200 bg-red-50"
-            : "border-blue-200 bg-blue-50";
+            ? "border-rose-400/20 bg-rose-400/10"
+            : "border-cyan-400/20 bg-cyan-400/10";
 
     const amountTone = isPaid
-        ? "text-emerald-700"
+        ? "text-emerald-300"
         : isOverdue
-            ? "text-red-700"
-            : "text-blue-700";
+            ? "text-rose-300"
+            : "text-cyan-300";
 
     return (
         <div className={cn("rounded-2xl border p-5 shadow-sm", tone)}>
             <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
-                    <div className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                    <div className="text-xs font-medium uppercase tracking-wide text-slate-400">
                         {isPaid ? "Đã thanh toán" : "Số tiền cần thanh toán"}
                     </div>
                     <div
@@ -60,7 +60,7 @@ export function PaymentHero({ invoice }: { invoice: InvoiceDto }) {
                 </Badge>
             </div>
 
-            <div className="mt-2 text-sm text-slate-600">
+            <div className="mt-2 text-sm text-slate-300">
                 {isPaid ? (
                     <>
                         Hoá đơn {invoice.code} · Kỳ {invoice.billingPeriodCode}
@@ -68,11 +68,11 @@ export function PaymentHero({ invoice }: { invoice: InvoiceDto }) {
                 ) : (
                     <>
                         Hạn thanh toán:{" "}
-                        <strong className="text-slate-800">
+                        <strong className="text-white">
                             {formatDate(invoice.dueDate)}
                         </strong>
                         {isOverdue && days > 0 && (
-                            <span className="ml-2 font-semibold text-red-700">
+                            <span className="ml-2 font-semibold text-rose-300">
                                 · Quá hạn {days} ngày
                             </span>
                         )}
@@ -83,7 +83,7 @@ export function PaymentHero({ invoice }: { invoice: InvoiceDto }) {
             {!isPaid && invoice.status !== "CANCELLED" && (
                 <a
                     href="#payment"
-                    className="mt-4 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-6 text-base font-semibold text-white shadow-sm transition-colors hover:bg-blue-700 active:bg-blue-800"
+                    className="mt-4 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-linear-to-r from-teal-600 to-cyan-500 px-6 text-base font-semibold text-white shadow-[0_0_18px_rgba(34,211,238,0.18)] transition-all hover:brightness-110"
                 >
                     Thanh toán ngay
                 </a>

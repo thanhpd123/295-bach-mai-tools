@@ -192,20 +192,20 @@ export function BillingManager() {
     return (
         <div className="space-y-4">
             {message && (
-                <div className="rounded-lg bg-emerald-50 px-4 py-2 text-sm text-emerald-700">
+                <div className="rounded-lg bg-emerald-500/10 px-4 py-2 text-sm text-emerald-300">
                     {message}
                 </div>
             )}
             {error && (
-                <div className="rounded-lg bg-red-50 px-4 py-2 text-sm text-red-700">
+                <div className="rounded-lg bg-rose-500/10 px-4 py-2 text-sm text-rose-300">
                     {error}
                 </div>
             )}
 
             {/* Mở kỳ mới */}
-            <div className="flex flex-wrap items-end gap-3 rounded-xl border border-slate-200 bg-white p-4">
+            <div className="glass flex flex-wrap items-end gap-3 rounded-xl p-4">
                 <div>
-                    <label className="text-xs text-slate-500">Tháng</label>
+                    <label className="text-xs text-slate-400">Tháng</label>
                     <Input
                         type="number"
                         min={1}
@@ -216,7 +216,7 @@ export function BillingManager() {
                     />
                 </div>
                 <div>
-                    <label className="text-xs text-slate-500">Năm</label>
+                    <label className="text-xs text-slate-400">Năm</label>
                     <Input
                         type="number"
                         min={2020}
@@ -228,11 +228,11 @@ export function BillingManager() {
                 </div>
                 <Button onClick={createPeriod}>Mở kỳ mới</Button>
                 <div className="ml-auto flex items-center gap-2">
-                    <label className="text-sm text-slate-600">Chọn kỳ:</label>
+                    <label className="text-sm text-slate-300">Chọn kỳ:</label>
                     <select
                         value={selectedPeriodId}
                         onChange={(e) => selectPeriod(e.target.value)}
-                        className="h-10 rounded-lg border border-slate-300 bg-white px-3 text-sm"
+                        className="h-10 rounded-lg border border-white/15 bg-white/5 px-3 text-sm text-white"
                     >
                         <option value="">— chọn —</option>
                         {periods.map((p) => (
@@ -247,9 +247,9 @@ export function BillingManager() {
             {selectedPeriodId && (
                 <>
                     {/* Chỉ số */}
-                    <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-                        <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
-                            <h2 className="font-semibold text-slate-900">
+                    <div className="glass overflow-hidden rounded-xl">
+                        <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
+                            <h2 className="font-semibold text-white">
                                 Nhập chỉ số điện/nước
                             </h2>
                             <Button onClick={saveReadings} disabled={saving}>
@@ -258,7 +258,7 @@ export function BillingManager() {
                         </div>
                         <div className="overflow-x-auto">
                             <table className="w-full text-left text-sm">
-                                <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+                                <thead className="border-b border-white/10 bg-white/5 text-xs uppercase tracking-wide text-slate-400">
                                     <tr>
                                         <th className="px-4 py-2 font-medium">Phòng</th>
                                         <th className="px-4 py-2 font-medium">Điện cũ</th>
@@ -271,7 +271,7 @@ export function BillingManager() {
                                         <th className="px-4 py-2 font-medium">Số xe</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-slate-100">
+                                <tbody className="divide-y divide-white/5">
                                     {rooms.map((room) => {
                                         const v = values[room.id] ?? {
                                             electricityOld: "",
@@ -286,8 +286,8 @@ export function BillingManager() {
                                         const waterOld = Number(v.waterOld || 0);
                                         const waterNew = Number(v.waterNew || 0);
                                         return (
-                                            <tr key={room.id} className="hover:bg-slate-50">
-                                                <td className="px-4 py-2 font-semibold text-slate-900">
+                                            <tr key={room.id} className="hover:bg-white/5">
+                                                <td className="px-4 py-2 font-semibold text-white">
                                                     {room.number}
                                                 </td>
                                                 <td className="px-4 py-2">
@@ -312,7 +312,7 @@ export function BillingManager() {
                                                         }
                                                     />
                                                 </td>
-                                                <td className="px-4 py-2 tabular-nums text-slate-700">
+                                                <td className="px-4 py-2 tabular-nums text-slate-200">
                                                     {elecNew - elecOld}
                                                 </td>
                                                 <td className="px-4 py-2">
@@ -337,7 +337,7 @@ export function BillingManager() {
                                                         }
                                                     />
                                                 </td>
-                                                <td className="px-4 py-2 tabular-nums text-slate-700">
+                                                <td className="px-4 py-2 tabular-nums text-slate-200">
                                                     {waterNew - waterOld}
                                                 </td>
                                                 <td className="px-4 py-2">
@@ -369,8 +369,8 @@ export function BillingManager() {
                     </div>
 
                     {/* Tạo hoá đơn */}
-                    <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-white p-4">
-                        <p className="text-sm text-slate-600">
+                    <div className="glass flex items-center justify-between rounded-xl p-4">
+                        <p className="text-sm text-slate-300">
                             Tạo hoá đơn cho tất cả phòng có chỉ số trong kỳ này. Hoá đơn cũ
                             chưa thanh toán sẽ được tạo lại.
                         </p>
@@ -381,7 +381,7 @@ export function BillingManager() {
                 </>
             )}
 
-            {loading && <div className="text-sm text-slate-500">Đang tải...</div>}
+            {loading && <div className="text-sm text-slate-400">Đang tải...</div>}
         </div>
     );
 }

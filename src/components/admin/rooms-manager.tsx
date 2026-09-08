@@ -73,17 +73,17 @@ export function RoomsManager() {
     };
 
     if (loading) {
-        return <div className="p-10 text-center text-sm text-slate-500">Đang tải...</div>;
+        return <div className="p-10 text-center text-sm text-slate-400">Đang tải...</div>;
     }
     if (error) {
-        return <div className="p-10 text-center text-sm text-red-600">{error}</div>;
+        return <div className="p-10 text-center text-sm text-rose-300">{error}</div>;
     }
 
     return (
-        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+        <div className="glass overflow-hidden rounded-xl">
             <div className="overflow-x-auto">
                 <table className="w-full text-left text-sm">
-                    <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+                    <thead className="border-b border-white/10 bg-white/5 text-xs uppercase tracking-wide text-slate-400">
                         <tr>
                             <th className="px-4 py-3 font-medium">Phòng</th>
                             <th className="px-4 py-3 font-medium">Tầng</th>
@@ -93,13 +93,13 @@ export function RoomsManager() {
                             <th className="px-4 py-3 font-medium">SĐT liên hệ</th>
                         </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100">
+                    <tbody className="divide-y divide-white/5">
                         {rooms.map((room) => (
-                            <tr key={room.id} className="hover:bg-slate-50">
-                                <td className="px-4 py-3 font-semibold text-slate-900">
+                            <tr key={room.id} className="hover:bg-white/5">
+                                <td className="px-4 py-3 font-semibold text-white">
                                     {room.number}
                                 </td>
-                                <td className="px-4 py-3 text-slate-700">{room.floor}</td>
+                                <td className="px-4 py-3 text-slate-200">{room.floor}</td>
                                 <td className="px-4 py-3">
                                     <RentCell room={room} onSaved={load} />
                                 </td>
@@ -109,21 +109,21 @@ export function RoomsManager() {
                                         onChange={(e) =>
                                             changeStatus(room, e.target.value as RoomStatus)
                                         }
-                                        className="rounded-lg border border-slate-300 bg-white px-2 py-1 text-sm"
+                                        className="rounded-lg border border-white/15 bg-white/5 px-2 py-1 text-sm text-white"
                                     >
                                         <option value="VACANT">Đang trống</option>
                                         <option value="OCCUPIED">Đang thuê</option>
                                         <option value="MAINTENANCE">Bảo trì</option>
                                     </select>
                                 </td>
-                                <td className="px-4 py-3 text-slate-700">
+                                <td className="px-4 py-3 text-slate-200">
                                     {room.tenantName ?? (
                                         <Badge variant="neutral">
                                             {roomStatusLabels[room.status]}
                                         </Badge>
                                     )}
                                 </td>
-                                <td className="px-4 py-3 text-slate-500">
+                                <td className="px-4 py-3 text-slate-400">
                                     {room.tenantPhone ?? "—"}
                                 </td>
                             </tr>
@@ -131,7 +131,7 @@ export function RoomsManager() {
                     </tbody>
                 </table>
             </div>
-            <div className="border-t border-slate-200 px-4 py-3 text-xs text-slate-400">
+            <div className="border-t border-white/10 px-4 py-3 text-xs text-slate-500">
                 {rooms.length} phòng · {formatCurrency(rooms.reduce((s, r) => s + r.baseRent, 0))} tổng giá phòng/tháng
             </div>
         </div>

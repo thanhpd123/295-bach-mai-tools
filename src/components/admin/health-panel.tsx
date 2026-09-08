@@ -37,10 +37,10 @@ export function HealthPanel() {
     }, []);
 
     if (error) {
-        return <div className="p-10 text-center text-sm text-red-600">{error}</div>;
+        return <div className="p-10 text-center text-sm text-rose-300">{error}</div>;
     }
     if (!health) {
-        return <div className="p-10 text-center text-sm text-slate-500">Đang kiểm tra...</div>;
+        return <div className="p-10 text-center text-sm text-slate-400">Đang kiểm tra...</div>;
     }
 
     const cards = [
@@ -77,9 +77,9 @@ export function HealthPanel() {
                 {cards.map((card) => (
                     <div
                         key={card.label}
-                        className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm"
+                        className="glass glass-card rounded-xl p-4"
                     >
-                        <div className="text-xs text-slate-500">{card.label}</div>
+                        <div className="text-xs text-slate-400">{card.label}</div>
                         <div className="mt-1 flex items-center gap-2">
                             <Badge variant={card.variant}>{card.value}</Badge>
                         </div>
@@ -87,13 +87,13 @@ export function HealthPanel() {
                 ))}
             </div>
 
-            <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-                <h2 className="border-b border-slate-200 px-4 py-3 font-semibold text-slate-900">
+            <div className="glass overflow-hidden rounded-xl">
+                <h2 className="border-b border-white/10 px-4 py-3 font-semibold text-white">
                     Nhật ký hoạt động gần đây
                 </h2>
                 <div className="overflow-x-auto">
                     <table className="w-full text-left text-sm">
-                        <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+                        <thead className="border-b border-white/10 bg-white/5 text-xs uppercase tracking-wide text-slate-400">
                             <tr>
                                 <th className="px-4 py-2 font-medium">Thời gian</th>
                                 <th className="px-4 py-2 font-medium">Người dùng</th>
@@ -101,22 +101,22 @@ export function HealthPanel() {
                                 <th className="px-4 py-2 font-medium">IP</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-100">
+                        <tbody className="divide-y divide-white/5">
                             {logs.map((log) => (
                                 <tr key={log.id}>
-                                    <td className="px-4 py-2 text-slate-500">
+                                    <td className="px-4 py-2 text-slate-400">
                                         {formatDate(log.createdAt)}
                                     </td>
-                                    <td className="px-4 py-2 text-slate-700">
+                                    <td className="px-4 py-2 text-slate-200">
                                         {log.actorName}
                                     </td>
-                                    <td className="px-4 py-2 text-slate-700">{log.action}</td>
-                                    <td className="px-4 py-2 text-slate-500">{log.ip ?? "—"}</td>
+                                    <td className="px-4 py-2 text-slate-200">{log.action}</td>
+                                    <td className="px-4 py-2 text-slate-400">{log.ip ?? "—"}</td>
                                 </tr>
                             ))}
                             {logs.length === 0 && (
                                 <tr>
-                                    <td colSpan={4} className="px-4 py-6 text-center text-slate-400">
+                                    <td colSpan={4} className="px-4 py-6 text-center text-slate-500">
                                         Chưa có nhật ký.
                                     </td>
                                 </tr>

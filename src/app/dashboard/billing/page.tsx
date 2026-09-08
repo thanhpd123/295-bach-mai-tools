@@ -7,10 +7,10 @@ export default function BillingPage() {
     return (
         <div className="space-y-6">
             <div>
-                <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+                <h1 className="text-3xl font-semibold tracking-tight text-white">
                     Kỳ thanh toán & chỉ số
                 </h1>
-                <p className="text-sm text-slate-500">
+                <p className="text-sm text-slate-400">
                     Mở kỳ, nhập số điện/nước từng phòng rồi tạo hoá đơn hàng loạt.
                 </p>
             </div>

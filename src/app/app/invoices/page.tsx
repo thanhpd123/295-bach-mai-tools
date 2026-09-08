@@ -11,7 +11,7 @@ export default async function TenantInvoicesPage() {
 
     if (!tenant) {
         return (
-            <div className="rounded-xl border border-slate-200 bg-white p-8 text-center text-slate-500">
+            <div className="glass rounded-xl p-8 text-center text-slate-400">
                 Tài khoản của bạn chưa được gắn với phòng nào.
             </div>
         );
@@ -21,14 +21,14 @@ export default async function TenantInvoicesPage() {
 
     return (
         <div className="space-y-4">
-            <h1 className="text-xl font-bold text-slate-900">Lịch sử hoá đơn</h1>
+            <h1 className="text-xl font-bold text-white">Lịch sử hoá đơn</h1>
 
             {invoices.length === 0 ? (
-                <div className="rounded-xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-500">
+                <div className="glass rounded-xl p-8 text-center text-sm text-slate-400">
                     Chưa có hoá đơn nào.
                 </div>
             ) : (
-                <div className="divide-y divide-slate-100 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+                <div className="glass divide-y divide-white/5 overflow-hidden rounded-2xl">
                     {invoices.map((invoice) => (
                         <InvoiceListItem key={invoice.id} invoice={invoice} />
                     ))}

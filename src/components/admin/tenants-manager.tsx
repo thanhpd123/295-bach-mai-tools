@@ -8,7 +8,7 @@ import { apiFetch } from "@/lib/api-client";
 import type { Paginated, RoomDto, TenantDto } from "@/types";
 
 const selectClass =
-    "h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm";
+    "h-10 w-full rounded-lg border border-white/15 bg-white/5 px-3 text-sm text-white";
 
 export function TenantsManager() {
     const [tenants, setTenants] = useState<TenantDto[]>([]);
@@ -210,12 +210,12 @@ export function TenantsManager() {
     return (
         <div className="space-y-4">
             {message && (
-                <div className="rounded-lg bg-emerald-50 px-4 py-2 text-sm text-emerald-700">
+                <div className="rounded-lg bg-emerald-500/10 px-4 py-2 text-sm text-emerald-300">
                     {message}
                 </div>
             )}
             {error && (
-                <div className="rounded-lg bg-red-50 px-4 py-2 text-sm text-red-700">
+                <div className="rounded-lg bg-rose-500/10 px-4 py-2 text-sm text-rose-300">
                     {error}
                 </div>
             )}
@@ -223,7 +223,7 @@ export function TenantsManager() {
             {/* Tạo người thuê */}
             <form
                 onSubmit={createTenant}
-                className="grid gap-3 rounded-xl border border-slate-200 bg-white p-4 sm:grid-cols-2 lg:grid-cols-6"
+                className="glass grid gap-3 rounded-xl p-4 sm:grid-cols-2 lg:grid-cols-6"
             >
                 <Input
                     placeholder="Họ tên *"
@@ -259,16 +259,16 @@ export function TenantsManager() {
             </form>
 
             {created && (
-                <div className="space-y-3 rounded-xl border border-blue-200 bg-blue-50 p-4">
+                <div className="space-y-3 rounded-xl border border-cyan-400/20 bg-cyan-400/10 p-4">
                     <div className="flex items-center justify-between gap-2">
-                        <h3 className="font-semibold text-slate-900">
+                        <h3 className="font-semibold text-white">
                             Gửi thông tin đăng nhập cho {created.fullName}
                         </h3>
                         <Button size="sm" variant="ghost" onClick={() => setCreated(null)}>
                             Đóng
                         </Button>
                     </div>
-                    <div className="space-y-1 rounded-lg bg-white p-3 text-sm text-slate-700">
+                    <div className="space-y-1 rounded-lg bg-white/5 p-3 text-sm text-slate-200">
                         <p>
                             Link đăng nhập:{" "}
                             <strong className="break-all">
@@ -297,7 +297,7 @@ export function TenantsManager() {
             {/* Chuyển vào phòng */}
             <form
                 onSubmit={doMoveIn}
-                className="flex flex-wrap gap-3 rounded-xl border border-slate-200 bg-white p-4"
+                className="glass flex flex-wrap gap-3 rounded-xl p-4"
             >
                 <select
                     className={`${selectClass} max-w-xs`}
@@ -358,15 +358,15 @@ export function TenantsManager() {
             </div>
 
             {/* Danh sách */}
-            <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+            <div className="glass overflow-hidden rounded-xl">
                 {loading ? (
-                    <div className="p-10 text-center text-sm text-slate-500">
+                    <div className="p-10 text-center text-sm text-slate-400">
                         Đang tải...
                     </div>
                 ) : (
                     <div className="overflow-x-auto">
                         <table className="w-full text-left text-sm">
-                            <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+                            <thead className="border-b border-white/10 bg-white/5 text-xs uppercase tracking-wide text-slate-400">
                                 <tr>
                                     <th className="px-4 py-3 font-medium">Họ tên</th>
                                     <th className="px-4 py-3 font-medium">SĐT liên hệ</th>
@@ -376,19 +376,19 @@ export function TenantsManager() {
                                     <th className="px-4 py-3 font-medium">Thao tác</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-slate-100">
+                            <tbody className="divide-y divide-white/5">
                                 {tenants.map((tenant) => (
-                                    <tr key={tenant.id} className="hover:bg-slate-50">
-                                        <td className="px-4 py-3 font-medium text-slate-900">
+                                    <tr key={tenant.id} className="hover:bg-white/5">
+                                        <td className="px-4 py-3 font-medium text-white">
                                             {tenant.fullName}
                                         </td>
-                                        <td className="px-4 py-3 text-slate-700">
+                                        <td className="px-4 py-3 text-slate-200">
                                             {tenant.phone ?? "—"}
                                         </td>
-                                        <td className="px-4 py-3 text-slate-700">
+                                        <td className="px-4 py-3 text-slate-200">
                                             {tenant.username}
                                         </td>
-                                        <td className="px-4 py-3 text-slate-700">
+                                        <td className="px-4 py-3 text-slate-200">
                                             {tenant.activeRoom ?? "—"}
                                         </td>
                                         <td className="px-4 py-3">
@@ -438,7 +438,7 @@ export function TenantsManager() {
                                     <tr>
                                         <td
                                             colSpan={6}
-                                            className="px-4 py-10 text-center text-slate-500"
+                                            className="px-4 py-10 text-center text-slate-400"
                                         >
                                             Chưa có người thuê nào.
                                         </td>

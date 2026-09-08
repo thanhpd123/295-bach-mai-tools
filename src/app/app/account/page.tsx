@@ -14,18 +14,18 @@ export default async function AccountPage() {
 
     return (
         <div className="space-y-4">
-            <h1 className="text-xl font-bold text-slate-900">Cá nhân</h1>
+            <h1 className="text-xl font-bold text-white">Cá nhân</h1>
 
-            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div className="glass rounded-2xl p-5">
                 <div className="flex items-center gap-3">
-                    <div className="flex size-12 items-center justify-center rounded-full bg-blue-100 text-lg font-bold text-blue-700">
+                    <div className="flex size-12 items-center justify-center rounded-full bg-cyan-400/10 text-lg font-bold text-cyan-300">
                         {displayName.charAt(0).toUpperCase() || "?"}
                     </div>
                     <div className="min-w-0">
-                        <div className="truncate font-semibold text-slate-900">
+                        <div className="truncate font-semibold text-white">
                             {displayName || "Người thuê"}
                         </div>
-                        <div className="text-sm text-slate-500">
+                        <div className="text-sm text-slate-400">
                             {tenant?.activeRoom
                                 ? `Phòng ${tenant.activeRoom}`
                                 : "Chưa gắn phòng"}
@@ -33,28 +33,28 @@ export default async function AccountPage() {
                     </div>
                 </div>
                 {tenant?.phone && (
-                    <p className="mt-3 text-sm text-slate-600">
+                    <p className="mt-3 text-sm text-slate-300">
                         Số điện thoại: <strong>{tenant.phone}</strong>
                     </p>
                 )}
             </div>
 
-            <div className="divide-y divide-slate-100 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <div className="glass divide-y divide-white/5 overflow-hidden rounded-2xl">
                 <Link
                     href="/app/change-password"
-                    className="flex items-center gap-3 px-5 py-4 transition-colors hover:bg-slate-50"
+                    className="flex items-center gap-3 px-5 py-4 transition-colors hover:bg-white/5"
                 >
-                    <KeyRound className="size-5 text-slate-400" />
-                    <span className="flex-1 text-sm font-medium text-slate-700">
+                    <KeyRound className="size-5 text-slate-500" />
+                    <span className="flex-1 text-sm font-medium text-slate-200">
                         Đổi mật khẩu
                     </span>
                 </Link>
                 <Link
                     href="/app/huong-dan"
-                    className="flex items-center gap-3 px-5 py-4 transition-colors hover:bg-slate-50"
+                    className="flex items-center gap-3 px-5 py-4 transition-colors hover:bg-white/5"
                 >
-                    <HelpCircle className="size-5 text-slate-400" />
-                    <span className="flex-1 text-sm font-medium text-slate-700">
+                    <HelpCircle className="size-5 text-slate-500" />
+                    <span className="flex-1 text-sm font-medium text-slate-200">
                         Hướng dẫn sử dụng
                     </span>
                 </Link>

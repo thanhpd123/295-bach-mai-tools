@@ -44,10 +44,10 @@ export function ChangePasswordForm() {
     return (
         <form
             onSubmit={handleSubmit}
-            className="max-w-md space-y-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
+            className="glass max-w-md space-y-4 rounded-2xl p-6"
         >
             <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-700">
+                <label className="text-sm font-medium text-slate-300">
                     Mật khẩu hiện tại
                 </label>
                 <Input
@@ -58,7 +58,7 @@ export function ChangePasswordForm() {
                 />
             </div>
             <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-700">
+                <label className="text-sm font-medium text-slate-300">
                     Mật khẩu mới (tối thiểu 8 ký tự)
                 </label>
                 <Input
@@ -70,7 +70,7 @@ export function ChangePasswordForm() {
                 />
             </div>
             <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-700">
+                <label className="text-sm font-medium text-slate-300">
                     Nhập lại mật khẩu mới
                 </label>
                 <Input
@@ -82,12 +82,12 @@ export function ChangePasswordForm() {
             </div>
 
             {error && (
-                <div className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+                <div className="rounded-lg bg-rose-500/10 px-3 py-2 text-sm text-rose-300">
                     {error}
                 </div>
             )}
             {message && (
-                <div className="rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+                <div className="rounded-lg bg-emerald-500/10 px-3 py-2 text-sm text-emerald-300">
                     {message}
                 </div>
             )}

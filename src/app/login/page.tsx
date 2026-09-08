@@ -9,16 +9,16 @@ export const metadata: Metadata = {
 
 export default function LoginPage() {
     return (
-        <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50 px-4">
+        <div className="relative flex min-h-screen flex-col items-center justify-center px-4">
             <div className="w-full max-w-md">
                 <div className="mb-8 text-center">
-                    <div className="mx-auto mb-3 flex size-12 items-center justify-center">
-                        <LogoMark className="size-12" />
+                    <div className="mx-auto mb-3 flex size-14 items-center justify-center">
+                        <LogoMark className="size-14" />
                     </div>
-                    <h1 className="text-2xl font-bold text-slate-900">
+                    <h1 className="text-gradient text-3xl font-bold tracking-tight">
                         {siteConfig.name}
                     </h1>
-                    <p className="mt-1 text-sm text-slate-500">
+                    <p className="mt-2 text-sm text-slate-400">
                         Đăng nhập để xem phòng và thanh toán hoá đơn
                     </p>
                 </div>

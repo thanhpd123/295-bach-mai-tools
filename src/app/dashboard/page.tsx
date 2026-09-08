@@ -66,35 +66,54 @@ export default async function DashboardPage() {
         },
     ];
 
+    const todayLabel = new Date().toLocaleDateString("vi-VN", {
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+    });
+
     return (
         <div className="space-y-6">
-            <div>
-                <h1 className="text-2xl font-bold tracking-tight text-slate-900">
-                    Tổng quan
-                </h1>
-                <p className="text-sm text-slate-500">
-                    Tình hình phòng trọ và thu tiền của kỳ hiện tại.
-                </p>
+            {/* Hero */}
+            <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
+                <div>
+                    <p className="mb-2 text-xs font-medium uppercase tracking-[0.24em] text-cyan-300/70">
+                        {todayLabel}
+                    </p>
+                    <h1 className="text-3xl font-semibold tracking-tight text-white md:text-4xl">
+                        Tổng quan<span className="text-cyan-300">.</span>
+                    </h1>
+                    <p className="mt-2 text-sm text-slate-400">
+                        Tình hình phòng trọ và thu tiền của kỳ hiện tại.
+                    </p>
+                </div>
             </div>
 
             {/* Stat cards */}
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {statCards.map((card) => (
-                    <Card key={card.label}>
+                    <Card key={card.label} className="glass-card">
                         <CardHeader className="flex-row items-center justify-between space-y-0">
                             <CardDescription>{card.label}</CardDescription>
-                            <card.icon className="size-4 text-blue-600" />
+                            <div className="rounded-xl border border-white/10 bg-white/10 p-2.5 text-cyan-300 shadow-[0_0_18px_rgba(34,211,238,0.15)]">
+                                <card.icon className="size-4" />
+                            </div>
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold">{card.value}</div>
-                            <div className="mt-1 text-xs text-slate-500">{card.sub}</div>
+                            <div className="text-2xl font-semibold tracking-tight text-white tabular-nums">
+                                {card.value}
+                            </div>
+                            <div className="mt-1 text-xs text-slate-400">
+                                {card.sub}
+                            </div>
                         </CardContent>
                     </Card>
                 ))}
             </div>
 
             {/* Quick actions */}
-            <Card>
+            <Card className="glass-card">
                 <CardHeader>
                     <CardTitle>Thao tác nhanh</CardTitle>
                     <CardDescription>
@@ -105,19 +124,19 @@ export default async function DashboardPage() {
                 <CardContent className="flex flex-wrap gap-3">
                     <Link
                         href="/dashboard/billing"
-                        className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700"
+                        className="inline-flex items-center gap-2 rounded-lg bg-linear-to-r from-teal-600 to-cyan-500 px-4 py-2 text-sm font-medium text-white shadow-[0_0_18px_rgba(34,211,238,0.18)] transition-all hover:brightness-110"
                     >
                         Mở kỳ & nhập chỉ số <ArrowRight className="size-4" />
                     </Link>
                     <Link
                         href="/dashboard/invoices"
-                        className="inline-flex items-center gap-2 rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
+                        className="glass-button inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-slate-200"
                     >
                         Xem hoá đơn
                     </Link>
                     <Link
                         href="/dashboard/rooms"
-                        className="inline-flex items-center gap-2 rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
+                        className="glass-button inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-slate-200"
                     >
                         Cập nhật phòng trống
                     </Link>
@@ -125,7 +144,7 @@ export default async function DashboardPage() {
             </Card>
 
             {stats.overdueInvoices > 0 && (
-                <div className="flex items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                <div className="flex items-center gap-2 rounded-xl border border-amber-400/20 bg-amber-400/10 px-4 py-3 text-sm text-amber-300">
                     <AlertTriangle className="size-4 shrink-0" />
                     Có {stats.overdueInvoices} hoá đơn quá hạn cần nhắc người thuê.
                 </div>

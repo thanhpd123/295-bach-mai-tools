@@ -5,11 +5,14 @@ type Variant = "primary" | "secondary" | "outline" | "ghost" | "destructive";
 type Size = "sm" | "md" | "lg" | "xl";
 
 const variantClasses: Record<Variant, string> = {
-    primary: "bg-blue-600 text-white shadow-sm hover:bg-blue-700",
-    secondary: "bg-slate-100 text-slate-900 hover:bg-slate-200",
-    outline: "border border-slate-300 bg-white text-slate-700 hover:bg-slate-50",
-    ghost: "text-slate-600 hover:bg-slate-100",
-    destructive: "bg-red-600 text-white shadow-sm hover:bg-red-700",
+    primary:
+        "bg-linear-to-r from-teal-600 to-cyan-500 text-white shadow-[0_0_18px_rgba(34,211,238,0.18)] hover:brightness-110 hover:scale-[1.02] active:scale-[0.98]",
+    secondary: "bg-white/10 text-white hover:bg-white/15",
+    outline:
+        "border border-white/15 bg-white/5 text-slate-200 backdrop-blur-xl hover:border-cyan-300/40 hover:bg-white/10 hover:text-white",
+    ghost: "text-slate-300 hover:bg-white/10 hover:text-white",
+    destructive:
+        "bg-rose-500/10 text-rose-300 hover:bg-rose-500/20",
 };
 
 const sizeClasses: Record<Size, string> = {
@@ -29,7 +32,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         <button
             ref={ref}
             className={cn(
-                "inline-flex touch-manipulation items-center justify-center gap-2 rounded-lg font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:pointer-events-none disabled:opacity-50",
+                "inline-flex touch-manipulation items-center justify-center gap-2 rounded-lg font-medium transition-all focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-400 disabled:pointer-events-none disabled:opacity-50",
                 variantClasses[variant],
                 sizeClasses[size],
                 className,

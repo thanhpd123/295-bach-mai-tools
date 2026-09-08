@@ -141,19 +141,19 @@ export function SettingsPanel() {
     return (
         <div className="space-y-6">
             {message && (
-                <div className="rounded-lg bg-emerald-50 px-4 py-2 text-sm text-emerald-700">
+                <div className="rounded-lg bg-emerald-500/10 px-4 py-2 text-sm text-emerald-300">
                     {message}
                 </div>
             )}
             {error && (
-                <div className="rounded-lg bg-red-50 px-4 py-2 text-sm text-red-700">
+                <div className="rounded-lg bg-rose-500/10 px-4 py-2 text-sm text-rose-300">
                     {error}
                 </div>
             )}
 
             {/* Tài khoản ngân hàng */}
-            <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-                <h2 className="mb-3 font-semibold text-slate-900">
+            <div className="glass rounded-xl p-4">
+                <h2 className="mb-3 font-semibold text-white">
                     Tài khoản ngân hàng nhận tiền
                 </h2>
                 <form onSubmit={addAccount} className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
@@ -198,13 +198,13 @@ export function SettingsPanel() {
                     {accounts.map((account) => (
                         <div
                             key={account.id}
-                            className="flex items-center justify-between rounded-lg border border-slate-200 px-4 py-2"
+                            className="flex items-center justify-between rounded-lg border border-white/10 bg-white/5 px-4 py-2"
                         >
                             <div className="text-sm">
                                 <span className="font-medium">
                                     {account.bankName} · {account.accountNumber}
                                 </span>
-                                <span className="ml-2 text-slate-500">
+                                <span className="ml-2 text-slate-400">
                                     {account.accountName}
                                 </span>
                             </div>
@@ -231,7 +231,7 @@ export function SettingsPanel() {
                         </div>
                     ))}
                     {accounts.length === 0 && (
-                        <p className="text-sm text-slate-400">
+                        <p className="text-sm text-slate-500">
                             Chưa có tài khoản ngân hàng nào.
                         </p>
                     )}
@@ -241,15 +241,15 @@ export function SettingsPanel() {
             {/* Đơn giá */}
             <form
                 onSubmit={saveFees}
-                className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm"
+                className="glass rounded-xl p-4"
             >
-                <h2 className="mb-3 font-semibold text-slate-900">
+                <h2 className="mb-3 font-semibold text-white">
                     Đơn giá điện/nước & phí cố định
                 </h2>
                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                     {feeFields.map((field) => (
                         <div key={field.key}>
-                            <label className="text-xs text-slate-500">{field.label}</label>
+                            <label className="text-xs text-slate-400">{field.label}</label>
                             <Input
                                 type="number"
                                 className="mt-1"

@@ -22,10 +22,10 @@ export function CopyAppLink() {
         <button
             type="button"
             onClick={copy}
-            className="flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 active:bg-slate-100"
+            className="flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/5 px-4 text-sm font-medium text-slate-200 transition-colors hover:bg-white/10"
         >
             {copied ? (
-                <Check className="size-4 text-emerald-600" />
+                <Check className="size-4 text-emerald-400" />
             ) : (
                 <LinkIcon className="size-4 text-slate-400" />
             )}

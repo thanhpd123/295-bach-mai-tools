@@ -120,7 +120,7 @@ export function InvoicesList() {
                 className="flex flex-wrap gap-2"
             >
                 <div className="relative flex-1 min-w-48">
-                    <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+                    <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-500" />
                     <Input
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
@@ -134,7 +134,7 @@ export function InvoicesList() {
                         setStatus(e.target.value);
                         setPage(1);
                     }}
-                    className="h-10 rounded-lg border border-slate-300 bg-white px-3 text-sm"
+                    className="h-10 rounded-lg border border-white/15 bg-white/5 px-3 text-sm text-white"
                 >
                     <option value="">Tất cả trạng thái</option>
                     <option value="PENDING">Chờ thanh toán</option>
@@ -149,24 +149,24 @@ export function InvoicesList() {
             </form>
 
             {error && (
-                <div className="rounded-lg bg-red-50 px-4 py-2 text-sm text-red-700">
+                <div className="rounded-lg bg-rose-500/10 px-4 py-2 text-sm text-rose-300">
                     {error}
                 </div>
             )}
 
-            <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+            <div className="glass overflow-hidden rounded-xl">
                 {loading ? (
-                    <div className="p-10 text-center text-sm text-slate-500">
+                    <div className="p-10 text-center text-sm text-slate-400">
                         Đang tải...
                     </div>
                 ) : invoices.length === 0 ? (
-                    <div className="p-10 text-center text-sm text-slate-500">
+                    <div className="p-10 text-center text-sm text-slate-400">
                         Chưa có hoá đơn nào.
                     </div>
                 ) : (
                     <div className="overflow-x-auto">
                         <table className="w-full text-left text-sm">
-                            <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+                            <thead className="border-b border-white/10 bg-white/5 text-xs uppercase tracking-wide text-slate-400">
                                 <tr>
                                     <th className="px-4 py-3 font-medium" />
                                     <th className="px-4 py-3 font-medium">Mã</th>
@@ -178,7 +178,7 @@ export function InvoicesList() {
                                     <th className="px-4 py-3 font-medium">Thao tác</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-slate-100">
+                            <tbody className="divide-y divide-white/5">
                                 {invoices.map((invoice) => (
                                     <InvoiceRow
                                         key={invoice.id}
@@ -198,7 +198,7 @@ export function InvoicesList() {
                 )}
 
                 {meta && (
-                    <div className="flex items-center justify-between border-t border-slate-200 px-4 py-3 text-sm text-slate-500">
+                    <div className="flex items-center justify-between border-t border-white/10 px-4 py-3 text-sm text-slate-400">
                         <span>
                             Trang {meta.page}/{Math.max(meta.totalPages, 1)} · {meta.total} hoá
                             đơn
@@ -320,9 +320,9 @@ function InvoiceRow({
 
     return (
         <>
-            <tr className="hover:bg-slate-50">
+            <tr className="hover:bg-white/5">
                 <td className="px-4 py-3">
-                    <button onClick={onToggle} className="text-slate-400 hover:text-slate-600">
+                    <button onClick={onToggle} className="text-slate-500 hover:text-slate-200">
                         {expanded ? (
                             <ChevronDown className="size-4" />
                         ) : (
@@ -330,18 +330,18 @@ function InvoiceRow({
                         )}
                     </button>
                 </td>
-                <td className="px-4 py-3 font-medium text-slate-900">{invoice.code}</td>
-                <td className="px-4 py-3 text-slate-700">{invoice.roomNumber}</td>
-                <td className="px-4 py-3 text-slate-700">{invoice.tenantName ?? "—"}</td>
+                <td className="px-4 py-3 font-medium text-white">{invoice.code}</td>
+                <td className="px-4 py-3 text-slate-200">{invoice.roomNumber}</td>
+                <td className="px-4 py-3 text-slate-200">{invoice.tenantName ?? "—"}</td>
                 <td className="px-4 py-3">
                     <Badge variant={statusVariant[invoice.status]}>
                         {invoiceStatusLabels[invoice.status]}
                     </Badge>
                 </td>
-                <td className="px-4 py-3 text-right font-medium text-slate-900">
+                <td className="px-4 py-3 text-right font-medium text-white">
                     {formatCurrency(invoice.totalAmount)}
                 </td>
-                <td className="px-4 py-3 text-slate-500">{formatDate(invoice.dueDate)}</td>
+                <td className="px-4 py-3 text-slate-400">{formatDate(invoice.dueDate)}</td>
                 <td className="px-4 py-3">
                     {invoice.status !== "PAID" && invoice.status !== "CANCELLED" && (
                         <div className="flex gap-2">
@@ -356,9 +356,9 @@ function InvoiceRow({
                 </td>
             </tr>
             {expanded && (
-                <tr className="bg-slate-50/60">
+                <tr className="bg-white/5">
                     <td colSpan={8} className="px-10 py-3">
-                        <div className="text-xs text-slate-600">
+                        <div className="text-xs text-slate-300">
                             <div className="mb-1 font-medium">Chi tiết khoản phí:</div>
                             <ul className="space-y-1">
                                 {invoice.items.map((item) => {
@@ -384,7 +384,7 @@ function InvoiceRow({
                                                         onChange={(ev) =>
                                                             setEdit(item.id, "quantity", ev.target.value)
                                                         }
-                                                        className="h-7 w-16 rounded border border-slate-300 px-1 text-right"
+                                                        className="h-7 w-16 rounded border border-white/15 bg-white/5 px-1 text-right text-white"
                                                     />
                                                     <span>×</span>
                                                     <input
@@ -395,7 +395,7 @@ function InvoiceRow({
                                                         onChange={(ev) =>
                                                             setEdit(item.id, "unitPrice", ev.target.value)
                                                         }
-                                                        className="h-7 w-24 rounded border border-slate-300 px-1 text-right"
+                                                        className="h-7 w-24 rounded border border-white/15 bg-white/5 px-1 text-right text-white"
                                                     />
                                                     <span className="text-slate-400">đ</span>
                                                 </span>
@@ -417,25 +417,25 @@ function InvoiceRow({
                                         value={note}
                                         onChange={(ev) => setNote(ev.target.value)}
                                         placeholder="Ghi chú (vd: Nghỉ hè – miễn thang máy)"
-                                        className="h-8 w-full rounded border border-slate-300 px-2"
+                                        className="h-8 w-full rounded border border-white/15 bg-white/5 px-2 text-white"
                                     />
                                     <div className="flex items-center gap-2">
                                         <Button size="sm" onClick={save} disabled={saving}>
                                             {saving ? "Đang lưu..." : "Lưu chỉnh sửa"}
                                         </Button>
                                         {saveError && (
-                                            <span className="text-red-600">{saveError}</span>
+                                            <span className="text-rose-300">{saveError}</span>
                                         )}
                                     </div>
                                 </div>
                             )}
-                            <div className="mt-2 border-t border-slate-200 pt-1 font-semibold">
+                            <div className="mt-2 border-t border-white/10 pt-1 font-semibold">
                                 Tổng:{" "}
                                 {formatCurrency(
                                     editable ? previewTotal : invoice.totalAmount,
                                 )}
                                 {invoice.paidAt && (
-                                    <span className="ml-2 font-normal text-emerald-600">
+                                    <span className="ml-2 font-normal text-emerald-400">
                                         · đã thu {formatDate(invoice.paidAt)}
                                     </span>
                                 )}

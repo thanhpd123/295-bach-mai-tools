@@ -16,18 +16,18 @@ export default async function TenantLayout({
     const tenant = user ? await getTenantDtoByUserId(user.id) : null;
 
     return (
-        <div className="flex min-h-screen flex-col bg-slate-50">
-            <header className="sticky top-0 z-30 border-b border-slate-200 bg-white">
+        <div className="relative flex min-h-screen flex-col">
+            <header className="sticky top-0 z-30 border-b border-white/10 bg-[#080b1b]/70 backdrop-blur-2xl">
                 <div className="mx-auto flex h-14 max-w-3xl items-center justify-between gap-3 px-4">
                     <Link href="/app" className="flex min-w-0 items-center gap-2">
                         <div className="flex size-8 shrink-0 items-center justify-center">
                             <LogoMark className="size-8" />
                         </div>
-                        <span className="truncate font-semibold">{siteConfig.name}</span>
+                        <span className="truncate font-semibold text-white">{siteConfig.name}</span>
                     </Link>
                     <div className="flex shrink-0 items-center gap-3">
                         {tenant?.activeRoom && (
-                            <span className="hidden text-sm text-slate-500 sm:inline">
+                            <span className="hidden text-sm text-slate-400 sm:inline">
                                 Phòng {tenant.activeRoom}
                             </span>
                         )}
