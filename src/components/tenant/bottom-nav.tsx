@@ -1,47 +1,49 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { Home, ReceiptText, UserRound } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+export type TenantTab = "home" | "invoices" | "account";
+
 const tabs = [
-    { href: "/app", label: "Trang chủ", icon: Home },
-    { href: "/app/invoices", label: "Hoá đơn", icon: ReceiptText },
-    { href: "/app/account", label: "Cá nhân", icon: UserRound },
+    { key: "home", label: "Trang chủ", icon: Home },
+    { key: "invoices", label: "Hoá đơn", icon: ReceiptText },
+    { key: "account", label: "Cá nhân", icon: UserRound },
 ] as const;
 
 /**
  * Thanh điều hướng dưới dành riêng cho mobile (ẩn trên desktop ≥ sm).
+ * Hoạt động theo kiểu ứng dụng di động: bấm tab chỉ đổi view, không tải lại trang.
  * Chừa safe-area cho iPhone có thanh home indicator.
  */
-export function BottomNav() {
-    const pathname = usePathname();
-
+export function BottomNav({
+    active,
+    onSelect,
+}: {
+    active: TenantTab;
+    onSelect: (tab: TenantTab) => void;
+}) {
     return (
         <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-white/10 bg-[#080b1b]/80 pb-[env(safe-area-inset-bottom)] backdrop-blur-2xl sm:hidden">
             <div className="mx-auto flex h-16 max-w-3xl">
-                {tabs.map(({ href, label, icon: Icon }) => {
-                    const active =
-                        href === "/app"
-                            ? pathname === href
-                            : pathname === href ||
-                            pathname.startsWith(`${href}/`);
+                {tabs.map(({ key, label, icon: Icon }) => {
+                    const isActive = key === active;
                     return (
-                        <Link
-                            key={href}
-                            href={href}
-                            aria-current={active ? "page" : undefined}
+                        <button
+                            key={key}
+                            type="button"
+                            onClick={() => onSelect(key)}
+                            aria-current={isActive ? "page" : undefined}
                             className={cn(
                                 "flex flex-1 flex-col items-center justify-center gap-1 text-xs font-medium transition-colors",
-                                active
+                                isActive
                                     ? "text-cyan-300"
                                     : "text-slate-400 hover:text-slate-200",
                             )}
                         >
                             <Icon className="size-5" />
                             {label}
-                        </Link>
+                        </button>
                     );
                 })}
             </div>

@@ -33,7 +33,7 @@ const invoiceInclude = {
     items: true,
 } as const;
 
-type RawInvoice = {
+export type RawInvoice = {
     id: string;
     code: string;
     roomId: string;
@@ -60,7 +60,7 @@ type RawInvoice = {
     }>;
 };
 
-function serializeInvoice(invoice: RawInvoice): InvoiceDto {
+export function serializeInvoice(invoice: RawInvoice): InvoiceDto {
     return {
         id: invoice.id,
         code: invoice.code,
@@ -624,13 +624,33 @@ export async function getInvoiceByCode(code: string): Promise<InvoiceDto | null>
  * Cập nhật các hoá đơn PENDING đã quá hạn thanh toán thành OVERDUE.
  * Chạy ngầm trên các đường đọc (dashboard, danh sách hoá đơn, trang người thuê)
  * để trạng thái quá hạn luôn được phản ánh kịp thời mà không cần cron.
+ *
+ * Giới hạn tần suất (TTL 60s) để không phát sinh ghi DB trên mỗi request đọc,
+ * giúp cổng người thuê phản hồi nhanh hơn trên mobile.
  */
+const OVERDUE_SYNC_INTERVAL_MS = 60_000;
+let lastOverdueSyncAt = 0;
+let overdueSyncInFlight: Promise<number> | null = null;
+
 export async function syncOverdueInvoices(): Promise<number> {
-    const result = await db.invoice.updateMany({
-        where: { status: "PENDING", dueDate: { lt: new Date() } },
-        data: { status: "OVERDUE" },
-    });
-    return result.count;
+    const now = Date.now();
+    if (now - lastOverdueSyncAt < OVERDUE_SYNC_INTERVAL_MS) return 0;
+    if (overdueSyncInFlight) return overdueSyncInFlight;
+
+    overdueSyncInFlight = db.invoice
+        .updateMany({
+            where: { status: "PENDING", dueDate: { lt: new Date() } },
+            data: { status: "OVERDUE" },
+        })
+        .then((result) => {
+            lastOverdueSyncAt = Date.now();
+            return result.count;
+        })
+        .finally(() => {
+            overdueSyncInFlight = null;
+        });
+
+    return overdueSyncInFlight;
 }
 
 export async function listInvoicesByTenant(

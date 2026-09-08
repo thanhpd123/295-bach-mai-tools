@@ -3,8 +3,9 @@ import { decimalToNumber, serializeDate } from "@/lib/serializers";
 import { getActiveBankAccount } from "@/lib/services/bank.service";
 import {
     getOpenBillingPeriod,
-    getInvoiceByCode,
+    serializeInvoice,
     syncOverdueInvoices,
+    type RawInvoice,
 } from "@/lib/services/billing.service";
 import type { DashboardStatsDto, TenantHomeDto } from "@/types";
 
@@ -77,10 +78,18 @@ export async function getDashboardStats(): Promise<DashboardStatsDto> {
 export async function getTenantHome(tenantId: string): Promise<TenantHomeDto> {
     await syncOverdueInvoices();
 
-    const activeLease = await db.lease.findFirst({
-        where: { tenantId, status: "ACTIVE" },
-        include: { room: true },
-    });
+    // Chạy song song các truy vấn độc lập để giảm độ trễ trên mobile.
+    const [activeLease, openPeriod, bankAccount] = await Promise.all([
+        db.lease.findFirst({
+            where: { tenantId, status: "ACTIVE" },
+            include: { room: true },
+        }),
+        db.billingPeriod.findFirst({
+            where: { status: "OPEN" },
+            orderBy: [{ year: "desc" }, { month: "desc" }],
+        }),
+        getActiveBankAccount(),
+    ]);
 
     if (!activeLease) {
         return {
@@ -89,45 +98,42 @@ export async function getTenantHome(tenantId: string): Promise<TenantHomeDto> {
             invoice: null,
             meterReading: null,
             dueDate: null,
-            bankAccount: await getActiveBankAccount(),
+            bankAccount,
         };
     }
 
-    const openPeriod = await db.billingPeriod.findFirst({
-        where: { status: "OPEN" },
-        orderBy: [{ year: "desc" }, { month: "desc" }],
-    });
-
-    const invoice = openPeriod
-        ? await db.invoice.findFirst({
-            where: {
-                billingPeriodId: openPeriod.id,
-                tenantId,
-                status: { in: ["PENDING", "PAID", "OVERDUE"] },
-            },
-            include: {
-                room: true,
-                billingPeriod: true,
-                tenant: true,
-                items: true,
-            },
-        })
-        : null;
-
-    const meterReading = openPeriod
-        ? await db.meterReading.findUnique({
-            where: {
-                roomId_billingPeriodId: {
-                    roomId: activeLease.roomId,
+    const [invoice, meterReading] = await Promise.all([
+        openPeriod
+            ? db.invoice.findFirst({
+                where: {
                     billingPeriodId: openPeriod.id,
+                    tenantId,
+                    status: { in: ["PENDING", "PAID", "OVERDUE"] },
                 },
-            },
-            include: { room: true },
-        })
-        : null;
+                include: {
+                    room: true,
+                    billingPeriod: true,
+                    tenant: true,
+                    items: true,
+                },
+            })
+            : Promise.resolve(null),
+        openPeriod
+            ? db.meterReading.findUnique({
+                where: {
+                    roomId_billingPeriodId: {
+                        roomId: activeLease.roomId,
+                        billingPeriodId: openPeriod.id,
+                    },
+                },
+                include: { room: true },
+            })
+            : Promise.resolve(null),
+    ]);
 
+    // Serialize trực tiếp từ bản ghi vừa truy vấn (không truy vấn lại DB).
     const serializedInvoice = invoice
-        ? await getInvoiceByCode(invoice.code)
+        ? serializeInvoice(invoice as unknown as RawInvoice)
         : null;
 
     return {
@@ -155,6 +161,6 @@ export async function getTenantHome(tenantId: string): Promise<TenantHomeDto> {
             openPeriod?.dueDate
                 ? serializeDate(openPeriod.dueDate)
                 : null,
-        bankAccount: await getActiveBankAccount(),
+        bankAccount,
     };
 }
