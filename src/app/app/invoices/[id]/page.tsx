@@ -1,10 +1,4 @@
-import Link from "next/link";
-import { notFound } from "next/navigation";
-import { getCurrentUser } from "@/lib/auth/current-user";
-import { getTenantByUserId } from "@/lib/services/tenant.service";
-import { getInvoiceById } from "@/lib/services/billing.service";
-import { getActiveBankAccount } from "@/lib/services/bank.service";
-import { InvoiceCard } from "@/components/tenant/invoice-card";
+import { TenantPortal } from "@/components/tenant/tenant-portal";
 
 export const dynamic = "force-dynamic";
 
@@ -14,23 +8,7 @@ export default async function TenantInvoiceDetailPage({
     params: Promise<{ id: string }>;
 }) {
     const { id } = await params;
-    const user = await getCurrentUser();
-    const tenant = user ? await getTenantByUserId(user.id) : null;
-
-    const invoice = await getInvoiceById(id);
-    // Bảo mật: chỉ người thuê sở hữu hoá đơn mới xem được.
-    if (!invoice || !tenant || invoice.tenantId !== tenant.id) {
-        notFound();
-    }
-
-    const bankAccount = await getActiveBankAccount();
-
-    return (
-        <div className="space-y-4">
-            <Link href="/app/invoices" className="text-sm text-cyan-300 hover:underline">
-                ← Quay lại danh sách
-            </Link>
-            <InvoiceCard invoice={invoice} bankAccount={bankAccount} />
-        </div>
-    );
+    // Mở chi tiết trong shell người thuê (dữ liệu chỉ gồm hoá đơn của chính
+    // người dùng hiện tại nên không lộ chéo giữa các tài khoản).
+    return <TenantPortal initialTab="invoices" initialInvoiceId={id} />;
 }

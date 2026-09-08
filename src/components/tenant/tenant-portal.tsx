@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { HelpCircle, KeyRound } from "lucide-react";
-import type { InvoiceDto, TenantDto, TenantHomeDto } from "@/types";
+import type { BankAccountDto, InvoiceDto, TenantDto, TenantHomeDto } from "@/types";
 import { BottomNav, type TenantTab } from "./bottom-nav";
 import { InvoiceCard } from "./invoice-card";
 import { InvoiceListItem } from "./invoice-list-item";
@@ -24,10 +24,15 @@ interface PortalData {
  */
 export function TenantPortal({
     initialTab = "home",
+    initialInvoiceId,
 }: {
     initialTab?: TenantTab;
+    initialInvoiceId?: string;
 }) {
     const [tab, setTab] = useState<TenantTab>(initialTab);
+    const [selectedInvoiceId, setSelectedInvoiceId] = useState<string | null>(
+        initialInvoiceId ?? null,
+    );
     const [data, setData] = useState<PortalData | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [attempt, setAttempt] = useState(0);
@@ -62,7 +67,22 @@ export function TenantPortal({
         setAttempt((n) => n + 1);
     }, []);
 
-    const selectTab = useCallback((next: TenantTab) => setTab(next), []);
+    const selectTab = useCallback((next: TenantTab) => {
+        setTab(next);
+        setSelectedInvoiceId(null);
+    }, []);
+
+    const openInvoice = useCallback(
+        (id: string) => setSelectedInvoiceId(id),
+        [],
+    );
+    const closeInvoice = useCallback(() => setSelectedInvoiceId(null), []);
+
+    const invoices = data?.invoices ?? [];
+    const selectedInvoice =
+        selectedInvoiceId
+            ? invoices.find((invoice) => invoice.id === selectedInvoiceId) ?? null
+            : null;
 
     return (
         <div className="space-y-4">
@@ -89,7 +109,22 @@ export function TenantPortal({
                         />
                     </div>
                     <div className={tab === "invoices" ? "" : "hidden"}>
-                        <InvoicesView invoices={data?.invoices ?? []} />
+                        {selectedInvoice ? (
+                            <InvoiceDetailView
+                                invoice={selectedInvoice}
+                                bankAccount={data?.home?.bankAccount ?? null}
+                                onBack={closeInvoice}
+                            />
+                        ) : selectedInvoiceId ? (
+                            <div className="glass rounded-xl p-8 text-center text-sm text-slate-400">
+                                Không tìm thấy hoá đơn.
+                            </div>
+                        ) : (
+                            <InvoicesView
+                                invoices={invoices}
+                                onOpenInvoice={openInvoice}
+                            />
+                        )}
                     </div>
                     <div className={tab === "account" ? "" : "hidden"}>
                         <AccountView
@@ -212,7 +247,13 @@ function HomeView({
     );
 }
 
-function InvoicesView({ invoices }: { invoices: InvoiceDto[] }) {
+function InvoicesView({
+    invoices,
+    onOpenInvoice,
+}: {
+    invoices: InvoiceDto[];
+    onOpenInvoice: (id: string) => void;
+}) {
     return (
         <div className="space-y-4">
             <h1 className="text-xl font-bold text-white">Lịch sử hoá đơn</h1>
@@ -224,10 +265,37 @@ function InvoicesView({ invoices }: { invoices: InvoiceDto[] }) {
             ) : (
                 <div className="glass divide-y divide-white/5 overflow-hidden rounded-2xl">
                     {invoices.map((invoice) => (
-                        <InvoiceListItem key={invoice.id} invoice={invoice} />
+                        <InvoiceListItem
+                            key={invoice.id}
+                            invoice={invoice}
+                            onOpen={() => onOpenInvoice(invoice.id)}
+                        />
                     ))}
                 </div>
             )}
+        </div>
+    );
+}
+
+function InvoiceDetailView({
+    invoice,
+    bankAccount,
+    onBack,
+}: {
+    invoice: InvoiceDto;
+    bankAccount: BankAccountDto | null;
+    onBack: () => void;
+}) {
+    return (
+        <div className="space-y-4">
+            <button
+                type="button"
+                onClick={onBack}
+                className="flex items-center gap-1 text-sm text-cyan-300 hover:underline"
+            >
+                ← Quay lại danh sách
+            </button>
+            <InvoiceCard invoice={invoice} bankAccount={bankAccount} />
         </div>
     );
 }

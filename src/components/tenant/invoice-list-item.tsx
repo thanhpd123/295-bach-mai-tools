@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { invoiceStatusLabels } from "@/lib/labels";
@@ -13,12 +12,19 @@ const statusVariant = {
     CANCELLED: "danger",
 } as const;
 
-/** Một dòng hoá đơn dạng thẻ (thay thế bảng trên màn hình nhỏ). */
-export function InvoiceListItem({ invoice }: { invoice: InvoiceDto }) {
+/** Một dòng hoá đơn dạng thẻ. Bấm mở chi tiết tức thì (không tải lại trang). */
+export function InvoiceListItem({
+    invoice,
+    onOpen,
+}: {
+    invoice: InvoiceDto;
+    onOpen: () => void;
+}) {
     return (
-        <Link
-            href={`/app/invoices/${invoice.id}`}
-            className="flex items-center gap-3 p-4 transition-colors hover:bg-white/5"
+        <button
+            type="button"
+            onClick={onOpen}
+            className="flex w-full items-center gap-3 p-4 text-left transition-colors hover:bg-white/5"
         >
             <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
@@ -45,6 +51,6 @@ export function InvoiceListItem({ invoice }: { invoice: InvoiceDto }) {
                 )}
             </div>
             <ChevronRight className="size-5 shrink-0 text-slate-600" />
-        </Link>
+        </button>
     );
 }
