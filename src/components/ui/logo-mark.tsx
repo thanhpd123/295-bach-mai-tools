@@ -1,4 +1,4 @@
-/** Dấu logo "Chủ Trọ": ngôi nhà trắng + cửa lỗ khóa trên nền gradient teal→cyan. */
+/** Dấu logo "Chủ Trọ": ngôi nhà trắng + cửa lỗ khóa. Nguồn: `assets/chu-tro-app-icon.svg`. */
 export function LogoMark({ className = "size-8" }: { className?: string }) {
     return (
         <svg
@@ -9,9 +9,9 @@ export function LogoMark({ className = "size-8" }: { className?: string }) {
         >
             <defs>
                 <linearGradient id="logo-grad" x1="0" y1="0" x2="1" y2="1">
-                    <stop offset="0%" stopColor="#0F766E" />
-                    <stop offset="55%" stopColor="#0d9488" />
-                    <stop offset="100%" stopColor="#22d3ee" />
+                    <stop offset="0%" stopColor="#2DD4BF" />
+                    <stop offset="55%" stopColor="#14B8A6" />
+                    <stop offset="100%" stopColor="#0F766E" />
                 </linearGradient>
             </defs>
             <rect width="512" height="512" rx="116" fill="url(#logo-grad)" />

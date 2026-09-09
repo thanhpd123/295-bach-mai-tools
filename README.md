@@ -35,9 +35,10 @@ manager-payment-tools/
 │   └── seed.ts                # 38 phòng + dữ liệu demo
 ├── scripts/
 │   ├── check-db.ts            # Kiểm tra dữ liệu sau seed
-│   └── create-admin.ts        # Tạo/upsert tài khoản ADMIN (production)
-├── public/                    # PWA: manifest, service worker, icons
-├── branding/                  # Logo & icon thương hiệu (SVG)
+│   ├── create-admin.ts        # Tạo/upsert tài khoản ADMIN (production)
+│   └── generate-icons.cjs     # Sinh icon PWA từ assets/
+├── public/                    # PWA: manifest, service worker, icons (sinh ra)
+├── assets/                    # Logo & icon thương hiệu (SVG nguồn)
 ├── src/
 │   ├── proxy.ts               # Route guard (Next 16: thay cho middleware)
 │   ├── app/
@@ -121,63 +122,7 @@ Mở `http://localhost:3000` → đăng nhập → `/dashboard` (chủ nhà) ho�
 | `npm run db:seed` | Xoá & tạo lại dữ liệu demo (chỉ dev) |
 | `npm run db:create-admin` | Tạo/upsert tài khoản ADMIN (production) |
 | `npm run db:studio` | Mở Prisma Studio |
-
----
-
-## 5. API endpoints
-
-**Auth**
-
-| Method | Endpoint | Mô tả |
-|---|---|---|
-| `POST` | `/api/auth/login` | Đăng nhập (username/SĐT + mật khẩu) |
-| `POST` | `/api/auth/logout` | Đăng xuất |
-| `GET` | `/api/auth/me` | Thông tin người dùng hiện tại |
-| `POST` | `/api/auth/change-password` | Đổi mật khẩu |
-
-**Quản lý (chỉ ADMIN)**
-
-| Method | Endpoint | Mô tả |
-|---|---|---|
-| `GET` | `/api/rooms` | Danh sách phòng |
-| `PATCH` | `/api/rooms/:id` | Cập nhật phòng |
-| `GET` | `/api/leases` | Danh sách hợp đồng |
-| `POST` | `/api/leases` | Tạo hợp đồng thuê |
-| `POST` | `/api/leases/:id/end` | Kết thúc hợp đồng |
-| `GET` / `POST` | `/api/tenants` | Danh sách / tạo người thuê |
-| `GET` / `PATCH` / `DELETE` | `/api/tenants/:id` | Chi tiết / cập nhật / xoá |
-| `POST` | `/api/tenants/:id/reset-password` | Đặt lại mật khẩu |
-| `GET` / `POST` | `/api/billing-periods` | Danh sách / tạo kỳ thanh toán |
-| `GET` | `/api/billing-periods/:id` | Chi tiết kỳ |
-| `POST` | `/api/billing-periods/:id/close` | Chốt kỳ |
-| `GET` / `POST` | `/api/meter-readings` | Chỉ số điện nước |
-| `GET` | `/api/invoices` | Danh sách hoá đơn |
-| `GET` / `PATCH` | `/api/invoices/:id` | Chi tiết / cập nhật hoá đơn |
-| `POST` | `/api/invoices/generate` | Sinh hoá đơn từ kỳ |
-| `POST` | `/api/invoices/:id/mark-paid` | Đánh dấu đã thanh toán |
-| `PATCH` | `/api/invoices/:id/items` | Sửa chi tiết phí |
-| `GET` | `/api/transfers` | Giao dịch chuyển khoản |
-| `GET` / `POST` | `/api/bank-accounts` | Tài khoản ngân hàng nhận tiền |
-| `PATCH` / `DELETE` | `/api/bank-accounts/:id` | Cập nhật / xoá |
-| `GET` / `PUT` | `/api/settings/fees` | Đơn giá mặc định |
-| `GET` | `/api/dashboard/stats` | Số liệu tổng quan |
-| `GET` | `/api/audit-logs` | Nhật ký hành động |
-| `GET` | `/api/health` | Health check |
-
-**Webhook (SePay)**
-
-| Method | Endpoint | Mô tả |
-|---|---|---|
-| `POST` | `/api/webhooks/sepay` | Nhận giao dịch, đối soát tự động |
-
-> ⚠️ `/api/payments*` là API cũ của app phòng khám, hiện trả `410 Gone` — đã được thay bằng `/api/invoices*`.
-
-**Format response chuẩn:**
-
-```json
-{ "success": true,  "data": { ... } }
-{ "success": false, "error": { "message": "...", "details": {} } }
-```
+| `npm run icons` | Sinh icon PWA (SVG + PNG) từ `assets/` |
 
 ---
 
@@ -186,55 +131,6 @@ Mở `http://localhost:3000` → đăng nhập → `/dashboard` (chủ nhà) ho�
 | Vai trò | Tên đăng nhập | Mật khẩu |
 |---|---|---|
 | Chủ nhà (ADMIN) | `admin` | `bachmai295` |
-| Người thuê | `nguyenvana` | `tenant123` |
-| Người thuê | `tranthib` | `tenant123` |
+| Người thuê | `0336677789` | `Satthuso2` |
 
----
 
-## 7. Thương hiệu "Chủ Trọ"
-
-Tên mới thay cho **QLPT** (Quản Lí Phòng Trọ). **Chủ Trọ** — ngắn, đúng đối tượng (chủ nhà trọ).
-
-- **Logo**: ngôi nhà trắng với **cửa hình lỗ khóa (keyhole)** trên nền teal gradient — ngôi nhà = phòng trọ, lỗ khóa = "chìa khóa quản lý".
-
-| Vai trò | Mã màu | Ghi chú |
-|---|---|---|
-| Primary | `#0F766E` | Teal đậm |
-| Mid | `#14B8A6` | Teal trung |
-| Light | `#2DD4BF` | Teal nhạt |
-| Text đậm | `#0F172A` | — |
-| Text phụ | `#64748B` | — |
-
-File logo/icon nằm trong `branding/`.
-
----
-
-## 8. Biến môi trường
-
-| Biến | Mô tả |
-|---|---|
-| `DATABASE_URL` | Kết nối PostgreSQL qua pooler (runtime) |
-| `DIRECT_URL` | Kết nối trực tiếp (migration) |
-| `NEXT_PUBLIC_APP_URL` | URL công khai của app |
-| `AUTH_SECRET` | Khoá ký JWT (bắt buộc khi deploy) |
-| `SEPA_WEBHOOK_SECRET` | Token xác minh webhook SePay |
-
----
-
-## 9. Deploy lên Vercel
-
-1. Đẩy code lên GitHub.
-2. Vercel → **Add New → Project** → import repo.
-3. Thêm **Environment Variables** ở mục 8.
-4. Bấm **Deploy**. Mỗi lần push lên `main`, Vercel tự build & deploy lại.
-
-> 💡 `postinstall → prisma generate` chạy tự động. Schema DB hiện dùng `db:push` (chưa có thư mục migration).
-
----
-
-## 10. Hướng phát triển tiếp theo
-
-- Tạo migration chính thức (`prisma migrate`) thay cho `db:push`.
-- Báo cáo doanh thu, xuất Excel/PDF.
-- Nhắc hạn thanh toán tự động (Zalo/email).
-- Giá điện theo bậc, bảng giá riêng từng phòng.

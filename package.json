@@ -14,7 +14,8 @@
     "db:push": "prisma db push",
     "db:seed": "tsx prisma/seed.ts",
     "db:create-admin": "tsx scripts/create-admin.ts",
-    "db:studio": "prisma studio"
+    "db:studio": "prisma studio",
+    "icons": "node scripts/generate-icons.cjs"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.9.1",
@@ -37,6 +38,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.3.2",
     "prisma": "^7.9.1",
+    "sharp": "^0.35.4",
     "tailwindcss": "^4",
     "tsx": "^4.23.12",
     "typescript": "^5"
